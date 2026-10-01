@@ -21,7 +21,7 @@ environments:
         isPrivate: false
         sortKey: 1760018593404.5
       data:
-        url: http://localhost:50301
+        url: http://localhost:8301
     - name: Localhost
       meta:
         id: env_7a1325ee412b467095bc71e95543a0a2

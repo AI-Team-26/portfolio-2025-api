@@ -1,9 +1,9 @@
 # Devop
 
 Ports:
-- 50300: website
-- 50301: api
-- 50302: database
+- 8300: website
+- 8301: api
+- 8302: database
 
 ## Docker containers for API and Database
 

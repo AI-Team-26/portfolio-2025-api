@@ -3,26 +3,14 @@
     "tasks": [
         {
             "label": "🦀 Cargo Build",
-            /*"icon": {
-                "id": "code-review",
-                "color": "terminal.ansiRed"
-            },*/
+            "note": "sqlX requires the database up and running (Docker container)",
             "type": "shell",
-            "options": { 
-                "cwd": "${workspaceFolder}"
-                /*"statusbar": {
-                    "label" : "ts"
-                }*/
-            },
+            "options": { "cwd": "${workspaceFolder}" },
             "command": "cargo build",
             "group": "build"
         },
         {
             "label": "🧠 Cargo SQLx Prepare",
-            /*"icon": {
-                "id": "database",
-                "color": "terminal.ansiYellow"
-            },*/
             "type": "shell",
             "options": { "cwd": "${workspaceFolder}"},
             "command": "cargo sqlx prepare",
@@ -30,10 +18,6 @@
         },
         {
             "label": "🐳 Docker Compose Up",
-            /*"icon": {
-                "id": "play",
-                "color": "terminal.ansiBlue"
-            },*/
             "type": "shell",
             "options": { "cwd": "${workspaceFolder}/devop"},
             "command": "docker compose -f compose.all.yaml up --build -d",

@@ -18,7 +18,7 @@ where S: Clone + Send + Sync + 'static
             CorsLayer::new()
                 .allow_origin([
                     HeaderValue::from_static("http://localhost:5173"), // local development
-                    HeaderValue::from_static("http://localhost:50300"),
+                    HeaderValue::from_static("http://localhost:8300"),
                     HeaderValue::try_from(production_url.as_str()).unwrap()
                 ])
                 .allow_methods([

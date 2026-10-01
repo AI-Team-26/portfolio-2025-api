@@ -2,11 +2,16 @@
 
 [![Deploy](https://github.com/alex-piccione/portfolio-2025-api/actions/workflows/deploy.yml/badge.svg)](https://github.com/alex-piccione/portfolio-2025-api/actions/workflows/deploy.yml)
 
-This API was created as a learning project for the Rust language.  
-Web API with Rust.  
-**Axum**: library for API service.  
-**Sqlx**: library to interact with database (compile-time schema checks).
+Portfolio: Software to Keep note of your assets that you own in different insitutions.   
+This project is the back-end API for Portfolo.  
 
+## Technology
+
+**Rust**: code language used for ythis API
+**Axum**: Rust library for API service.  
+**Sqlx**: Rust library to interact with database (compile-time schema checks).
+**Docker**: Containerization software used to run the services instances
+**Postgres**: Database
 
 ## Setup
 
