@@ -29,3 +29,15 @@
  calls (Coingecko API client) and inject TraceId into the existing JSON logging format (tracing-subscriber json writer customizer or field injection) so every log line carries the trace ID even without a
  collector deployed. Phase 1 (this PR): local span hierarchy (HTTP handler → service → repository SQL) + trace ID in logs. Phase 2 (follow-up, needs infra): OTLP export to Grafana Tempo/Jaeger — blocked until
  an OTLP collector exists in devops stack; leave exporter disabled-by-default via configuration flag enable_distributed_tracing (default false).
+
+- Epic 13 | Introduce mocking and service-level unit tests (mockall + trait seams; currently only pure-function units exist, services/repositories untested)
+  - Feature 13.1 [refactor/13_1_user_repo_trait] Introduce trait seam for ONE repository: define `trait UserRepository` (find_by_username, create) in src/repositories/user_repository.rs with
+ #[cfg_attr(test, mockall::automock)]; rename struct → UserRepositoryImpl implementing the trait; UserService/AuthService constructors take Arc<dyn UserRepository>; wire impl at startup in main.rs/DI. Add
+ mockall = "0.13". Behavior-preserving; decide async-fn-in-trait approach (async-trait vs boxed futures). Validates pattern before rollout.
+  - Feature 13.2 [test/13_2_auth_login_tests] Unit tests for AuthService.login() using MockUserRepository: happy path, wrong password → FailedLogin, unknown user → FailedLogin, database error propagation.
+ Offline (no Postgres), plain cargo test. Prerequisite: 13.1 merged.
+  - Feature 13.3 [refactor/13_3_remaining_traits] Roll out validated pattern to remaining repositories (session, currency, custodian, holding, currency_of_user): extract traits, *Impl renames, Arc<dyn
+ Trait> injection, DI updates. Max 2-3 repos per PR. No new tests here.
+  - Feature 13.4 [test/13_4_service_coverage] Extend suites to remaining flows: AuthService (signup duplicate, refresh rotation/expiry), SessionService (create/expire/purge), Currency/Custodian CRUD incl.
+ DatabaseError variants. Every public service method gets happy-path + primary failure-mode coverage via cargo test, zero external deps. Composes with refactor/05_thiserror_errors (do that first if possible
+ for clean typed assertions).
