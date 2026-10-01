@@ -1,6 +1,5 @@
 //pub(in crate::endpoints) mod response_utils; // only visible in endpoints module and its submodules
 pub mod request_json_validator;
-pub mod request_validator;
 pub mod response_utils;
 
 pub mod auth_endpoint;

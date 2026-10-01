@@ -1,12 +1,15 @@
 mod upsert {
     use crate::entities::custodian::{Custodian, CustodianKind};
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, validator::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Request {
+        #[validate(length(min = 3))]
         pub name: String,
+        #[validate(length(min = 1))]
         pub custodian: String,
         pub account: Option<String>,
+        #[validate(custom(function = "crate::endpoints::models::common::valid_custodian_kind"))]
         pub kind: String,
         pub color_code: String,
         pub description: Option<String>,
@@ -51,7 +54,7 @@ pub mod create {
 
     // Newtype for create requests
     #[derive(serde::Deserialize)]
-    #[serde(transparent)] // This makes deserialization work directly into the inner field
+    #[serde(transparent)]
     pub struct Request(pub upsert::Request);
 
     impl Request {
