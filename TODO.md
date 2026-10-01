@@ -12,3 +12,6 @@
 
 - Feature 7 [refactor/07_config_crate] Replace hand-rolled JSON loading (Configuration::load_from_json_file) with the `config` crate: layered precedence env > file > defaults via Config::builder +
  Environment::with_prefix("APP").separator("__"); drop CONFIGURATION_FILE path requirement, keep configuration_example.json as template, allow #[serde(default)] fallbacks on non-critical fields
+
+- Feature 8 [refactor/08_db_pool_tuning] Replace PgPool::connect defaults in main.rs with explicit PgPoolOptions: add db_max_connections (start 20), db_min_connections (start 2-5) and acquire_timeout (e.g.
+ 5s) to Configuration; document rationale (backpressure vs Postgres process-per-connection cost) and tune based on observed pool saturation under real load
