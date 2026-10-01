@@ -12,6 +12,7 @@ mod entities;
 mod jobs;
 mod repositories;
 mod services;
+mod state;
 mod utils;
 
 // The tokio::main macro is used to run the async main function

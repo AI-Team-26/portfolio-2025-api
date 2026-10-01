@@ -1,9 +1,6 @@
 use async_trait::async_trait;
 
-use crate::{
-    configuration::Configuration, jobs::job_manager::RecurringJob,
-    utils::dependency_injection::AppState,
-};
+use crate::{configuration::Configuration, jobs::job_manager::RecurringJob, state::AppState};
 
 #[derive(Clone)]
 pub struct UpdateCurrencyRatesJob {

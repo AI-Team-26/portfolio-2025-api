@@ -1,11 +1,11 @@
 use crate::endpoints::models::user_models as models;
 use crate::{
-    dependency_injection::AppState,
     endpoints::{
         request_json_validator::ValidJson,
         response_utils::{response_error, response_ok_no_data},
     },
     info,
+    state::AppState,
     utils::auth_middleware::Session,
 };
 use axum::{extract::State, response::IntoResponse, Extension};
