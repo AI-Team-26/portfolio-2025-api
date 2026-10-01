@@ -14,7 +14,7 @@ services:
       CONFIGURATION_FILE: ${CONFIGURATION_FILE:?missed}
       VERSION: ${VERSION:?local-1}
     ports:
-      - "50301:3000"
+      - "8301:3000"
     volumes:
       - ${VOLUMES_ROOT:?missed}/api:/data  
     networks: [portfolio]
@@ -26,7 +26,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?missed}
       POSTGRES_DB: portfolio
     ports:
-      - "50302:5432"
+      - "8302:5432"
     volumes:
       - ${VOLUMES_ROOT:?missed}/postgres:/var/lib/postgresql/data
     networks: [portfolio]

@@ -7,12 +7,14 @@ on:
 # permission for creating a package
 permissions:
   contents: read
-  packages: write
+  packages: none
+  #packages: write no need, "none" was working before
 
 env:
   # it MUST contain start with ghcr.io/ and it MUST be lowercase
-  IMAGE: ghcr.io/${{ github.repository_owner }}/portfolio-api
-  VERSION: 0.1.${{ github.run_number }}
+  #IMAGE: ghcr.io/${{ github.repository_owner }}/portfolio-api
+  IMAGE: ghcr.io/ai-team-26/portfolio-api
+  VERSION: 0.2.${{ github.run_number }}
   CONFIGURATION_FILE: /Data/projects/
 
 jobs:
@@ -36,6 +38,7 @@ jobs:
       - name: 🏗️ Build and push Docker image
         uses: docker/build-push-action@v5
         with:
+          #context: .
           push: true
           tags: |
             ${{ env.IMAGE }}:latest

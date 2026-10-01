@@ -3,26 +3,35 @@
     "tasks": [
         {
             "label": "🦀 Cargo Build",
-            /*"icon": {
-                "id": "code-review",
-                "color": "terminal.ansiRed"
-            },*/
             "type": "shell",
             "options": { 
-                "cwd": "${workspaceFolder}"
-                /*"statusbar": {
-                    "label" : "ts"
-                }*/
+                "cwd": "${workspaceFolder}",
+                "env": { "SQLX_OFFLINE": "true" },
             },
             "command": "cargo build",
             "group": "build"
         },
         {
+            "label": "☑️ Cargo Lint",
+            "type": "shell",
+            "options": { 
+                "cwd": "${workspaceFolder}",
+            },
+            "command": "cargo fmt && cargo clippy --all-targets --all-features -- -D warnings",
+            "group": "build"
+        },
+        {
+            "label": "🧪 Cargo Test",
+            "type": "shell",
+            "options": { 
+                "cwd": "${workspaceFolder}",
+                "env": { "SQLX_OFFLINE": "true" },
+            },
+            "command": "cargo test",
+            "group": "build"
+        },
+        {
             "label": "🧠 Cargo SQLx Prepare",
-            /*"icon": {
-                "id": "database",
-                "color": "terminal.ansiYellow"
-            },*/
             "type": "shell",
             "options": { "cwd": "${workspaceFolder}"},
             "command": "cargo sqlx prepare",
@@ -30,10 +39,6 @@
         },
         {
             "label": "🐳 Docker Compose Up",
-            /*"icon": {
-                "id": "play",
-                "color": "terminal.ansiBlue"
-            },*/
             "type": "shell",
             "options": { "cwd": "${workspaceFolder}/devop"},
             "command": "docker compose -f compose.all.yaml up --build -d",

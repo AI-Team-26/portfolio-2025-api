@@ -1,5 +1,8 @@
 # Build stage - use specific version with updates
-FROM rust:1.89-bookworm AS builder
+FROM rust:1.98-bookworm AS builder
+#FROM rust:1.98-slim AS builder
+#FROM rust:1.98-trixie AS builder
+# Doeas exist an image without critical vulnerabilities ???
 
 WORKDIR /app
 

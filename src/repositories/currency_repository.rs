@@ -1,6 +1,6 @@
-use sqlx::PgPool;
 use crate::entities::currency::Currency;
 use crate::entities::currency::CurrencyKind;
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct CurrencyRepository {
@@ -76,8 +76,8 @@ impl CurrencyRepository {
         Ok(())
     }
 
-    pub async fn list(&self) -> Result<Vec<Currency>, String> {        
-        let currencies = sqlx::query_as!(Currency, 
+    pub async fn list(&self) -> Result<Vec<Currency>, String> {
+        let currencies = sqlx::query_as!(Currency,
             r#"
             SELECT id, symbol, name, kind as "kind!: CurrencyKind", is_active, precision, is_major, coingecko_id
             FROM Currency
@@ -88,5 +88,4 @@ impl CurrencyRepository {
 
         Ok(currencies)
     }
-
 }

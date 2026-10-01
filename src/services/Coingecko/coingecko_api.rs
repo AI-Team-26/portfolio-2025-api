@@ -1,9 +1,11 @@
-use std::collections::HashMap;
-use reqwest::{Client, Response, header::{HeaderMap, HeaderValue}, Error as RequestError};
 use crate::configuration::Configuration;
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Client, Error as RequestError, Response,
+};
+use std::collections::HashMap;
 
 // https://docs.coingecko.com/
-
 
 #[derive(Clone)]
 pub struct CoingeckoApi {
@@ -11,13 +13,11 @@ pub struct CoingeckoApi {
     headers: HeaderMap,
 }
 
-const API_URL: &'static str = "https://api.coingecko.com/api/v3";
+const API_URL: &str = "https://api.coingecko.com/api/v3";
 
 pub type CoingeckoRates = HashMap<String, HashMap<String, f64>>;
 
-
 impl CoingeckoApi {
-
     pub fn new(config: &Configuration) -> Self {
         Self {
             client: Client::new(),
@@ -50,14 +50,26 @@ impl CoingeckoApi {
         match self.GET("/ping").await {
             Ok(response) => response.status().is_success(),
             Err(_) => false,
-        }  
-    }   
+        }
+    }
 
-    pub async fn get_rates<B: AsRef<str>, Q: AsRef<str>>(&self, base_ids: &[B], quote_ids: &[Q]) -> Result<CoingeckoRates, String> {
+    pub async fn get_rates<B: AsRef<str>, Q: AsRef<str>>(
+        &self,
+        base_ids: &[B],
+        quote_ids: &[Q],
+    ) -> Result<CoingeckoRates, String> {
         let path = format!(
             "/simple/price?ids={}&vs_currencies={}",
-            base_ids.iter().map(|s| s.as_ref()).collect::<Vec<_>>().join(","),
-            quote_ids.iter().map(|s| s.as_ref()).collect::<Vec<_>>().join(","),
+            base_ids
+                .iter()
+                .map(|s| s.as_ref())
+                .collect::<Vec<_>>()
+                .join(","),
+            quote_ids
+                .iter()
+                .map(|s| s.as_ref())
+                .collect::<Vec<_>>()
+                .join(","),
         );
 
         let result = self.GET(&path).await;
@@ -70,16 +82,9 @@ impl CoingeckoApi {
                     .map_err(|e| format!("Failed to parse JSON: {}", e))?;
 
                 Ok(data)
-            },
-            Ok(response) => {
-                Err(format!("Non-200 status: {}", response.status()))
-            },
-            Err(e) => {
-                Err(format!("Request failed: {}", e))
             }
+            Ok(response) => Err(format!("Non-200 status: {}", response.status())),
+            Err(e) => Err(format!("Request failed: {}", e)),
         }
     }
 }
-
-
-

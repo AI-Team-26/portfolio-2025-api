@@ -3,7 +3,7 @@
     "server_port": 3000,
     "log_level": "info",
     "app_domain": "my-app.com",
-    "database_connection_string": "postgres://portfolio_user:portfolio_password@localhost:50302/portfolio",
+    "database_connection_string": "postgres://portfolio_user:portfolio_password@localhost:8302/portfolio",
     "run_database_migrations": true,
     "admin_email": "admin@portfolius.org",
     "secrets": {

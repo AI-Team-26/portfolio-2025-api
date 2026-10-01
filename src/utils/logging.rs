@@ -25,7 +25,6 @@ macro_rules! debug {
     }};
 }
 
-
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {{
@@ -51,12 +50,10 @@ macro_rules! fatal_end_exit {
     }};
 }
 
-
-pub(crate) fn setup_logging(log_level:&str) {
-
+pub(crate) fn setup_logging(log_level: &str) {
     let log_level = match log_level.to_lowercase().as_str() {
         "trace" => tracing::Level::TRACE,
-        "debug" => tracing::Level::DEBUG, 
+        "debug" => tracing::Level::DEBUG,
         "info" => tracing::Level::INFO,
         "warn" => tracing::Level::WARN,
         "error" => tracing::Level::ERROR,
@@ -64,7 +61,7 @@ pub(crate) fn setup_logging(log_level:&str) {
     };
 
     tracing_subscriber::fmt()
-        .json()        
+        .json()
         .with_max_level(log_level)
         .with_thread_ids(true)
         //.with_thread_names(true)  // If you use named threads

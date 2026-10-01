@@ -1,3 +1,4 @@
+use crate::endpoints::response_utils::response_bad_request;
 use axum::{
     body::Body,
     extract::{rejection::JsonRejection, FromRequest, Json},
@@ -5,7 +6,6 @@ use axum::{
     response::IntoResponse,
 };
 use serde::de::DeserializeOwned;
-use crate::endpoints::response_utils::response_bad_request;
 
 pub struct ValidJson<T>(pub T);
 
@@ -23,9 +23,13 @@ where
                 let error_message = match json_rejection {
                     JsonRejection::JsonDataError(err) => format!("Invalid JSON data: {}", err),
                     JsonRejection::JsonSyntaxError(err) => format!("JSON syntax error: {}", err),
-                    JsonRejection::MissingJsonContentType(err) => format!("Missing JSON content type: {}", err),
-                    JsonRejection::BytesRejection(err) => format!("Failed to extract request body: {}", err),
-                    _ => format!("Invalid JSON request: {}", json_rejection)
+                    JsonRejection::MissingJsonContentType(err) => {
+                        format!("Missing JSON content type: {}", err)
+                    }
+                    JsonRejection::BytesRejection(err) => {
+                        format!("Failed to extract request body: {}", err)
+                    }
+                    _ => format!("Invalid JSON request: {}", json_rejection),
                 };
                 Err(response_bad_request(&error_message).into_response())
             }

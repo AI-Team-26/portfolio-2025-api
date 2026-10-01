@@ -1,4 +1,7 @@
-use crate::{entities::user::User, repositories::schemas::session_record::SessionRecord, utils::datetime::UtcDateTime};
+use crate::{
+    entities::user::User, repositories::schemas::session_record::SessionRecord,
+    utils::datetime::UtcDateTime,
+};
 
 #[derive(Clone)]
 pub struct Session {
@@ -19,7 +22,7 @@ impl From<(SessionRecord, User)> for Session {
     fn from((record, user): (SessionRecord, User)) -> Self {
         Session {
             id: record.id,
-            user: user,        
+            user,
             access_token: record.access_token,
             access_token_expires_at: record.access_token_expires_at,
             refresh_token: record.refresh_token,
@@ -28,13 +31,12 @@ impl From<(SessionRecord, User)> for Session {
             last_access_at: record.last_access_at,
             last_refresh_at: record.last_refresh_at,
             creation_ip_address: record.creation_ip_address,
-            creation_user_agent: record.creation_user_agent
+            creation_user_agent: record.creation_user_agent,
         }
     }
 }
 
 impl Session {
-
     /*
     pub fn is_access_token_active(&self) -> bool {
         self.access_token_expires_at > now()

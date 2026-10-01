@@ -1,18 +1,20 @@
+use crate::{
+    repositories::helpers::parse_decimal,
+    utils::datetime::{Date, UtcDateTime},
+};
 use rust_decimal::Decimal;
 use sqlx::FromRow;
-use sqlx:: Row;
-use crate::{repositories::helpers::{parse_decimal}, utils::datetime::{UtcDateTime, Date}};
-
+use sqlx::Row;
 
 #[derive(serde::Serialize, Clone)]
-#[serde(rename_all = "camelCase")] 
+#[serde(rename_all = "camelCase")]
 pub struct CurrencyRateRecord {
     pub base_currency_id: i32,
     pub quote_currency_id: i32,
     pub date: Date,
     pub source: String,
     pub rate: Decimal,
-    pub created_at: UtcDateTime, 
+    pub created_at: UtcDateTime,
 }
 
 impl<'r> FromRow<'r, sqlx::postgres::PgRow> for CurrencyRateRecord {
@@ -30,6 +32,6 @@ impl<'r> FromRow<'r, sqlx::postgres::PgRow> for CurrencyRateRecord {
 
 impl CurrencyRateRecord {
     pub fn display(&self) -> String {
-        format!("{}/{}", &self.base_currency_id, &self.quote_currency_id)
-    } 
+        format!("{}/{}", self.base_currency_id, self.quote_currency_id)
+    }
 }

@@ -1,9 +1,9 @@
 //use sqlx::postgres::PgArguments;
-use sqlx::{PgPool};
 use crate::repositories::errors::DatabaseError;
+use crate::repositories::helpers::{from_rust_decimal, to_rust_decimal};
 use crate::repositories::repository_traits::BaseRepository;
 use crate::repositories::schemas::holding_record::HoldingRecord;
-use crate::repositories::helpers::{from_rust_decimal, to_rust_decimal};
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct HoldingRepository {
@@ -17,7 +17,7 @@ impl HoldingRepository {
         Self { db_pool }
     }
 
-    pub async fn create(&self, record:HoldingRecord) -> Result<i32, String> {
+    pub async fn create(&self, record: HoldingRecord) -> Result<i32, String> {
         // let _ = sqlx::query!("SELECT id, username, role FROM usholdings WHERE id = $1", user.id); // used to "refresh" SQLx checks
         let row = sqlx::query!(
             r#"
@@ -40,7 +40,7 @@ impl HoldingRepository {
         Ok(row.id)
     }
 
-    pub async fn update(&self, record:HoldingRecord) -> Result<(), DatabaseError> {
+    pub async fn update(&self, record: HoldingRecord) -> Result<(), DatabaseError> {
         let result = sqlx::query!(
             r#"
                 UPDATE Holdings SET
@@ -52,7 +52,7 @@ impl HoldingRepository {
                     note = $8                
                 WHERE id = $1 AND user_id = $2
             "#,
-            record.id,            
+            record.id,
             record.user_id,
             record.custodian_id,
             record.currency_id,
@@ -68,17 +68,20 @@ impl HoldingRepository {
         self.check_result(result)
     }
 
-    pub async fn delete(&self, id:i32, user_id: &str) -> Result<(), DatabaseError> {
+    pub async fn delete(&self, id: i32, user_id: &str) -> Result<(), DatabaseError> {
         let result = sqlx::query!(
-            r#"delete from Holdings where id = $1 and user_id = $2"#, id, user_id)
-            .execute(&self.db_pool)
-            .await
-            .map_err(|e| DatabaseError::generic(e.to_string()))?;
+            r#"delete from Holdings where id = $1 and user_id = $2"#,
+            id,
+            user_id
+        )
+        .execute(&self.db_pool)
+        .await
+        .map_err(|e| DatabaseError::generic(e.to_string()))?;
 
         self.check_result(result)
     }
 
-    pub async fn single_for_user(&self, id:i32, user_id: &str) -> Result<HoldingRecord, String> {
+    pub async fn single_for_user(&self, id: i32, user_id: &str) -> Result<HoldingRecord, String> {
         let row =
             sqlx::query!(
                 "SELECT id, user_id, custodian_id, currency_id, date, action, amount, note FROM Holdings 
@@ -87,17 +90,17 @@ impl HoldingRepository {
                 .fetch_one(&self.db_pool)
                 .await
                 .map_err(|e| format!("Failed to get Holdings of user. {}", e))?;
-        
+
         let record = HoldingRecord {
-                id: row.id,
-                user_id: row.user_id,
-                custodian_id: row.custodian_id,
-                currency_id: row.currency_id,
-                date: row.date,
-                action: row.action,
-                amount: to_rust_decimal(row.amount.ok_or("Amount is NULL")?)?,
-                note: row.note,
-            };
+            id: row.id,
+            user_id: row.user_id,
+            custodian_id: row.custodian_id,
+            currency_id: row.currency_id,
+            date: row.date,
+            action: row.action,
+            amount: to_rust_decimal(row.amount.ok_or("Amount is NULL")?)?,
+            note: row.note,
+        };
 
         Ok(record)
     }
@@ -106,7 +109,7 @@ impl HoldingRepository {
         let rows = query.fetch_all(&self.db_pool)
             .await
             .map_err(|e| format!("Failed to get Holdings of user. {}", e))?;
-        
+
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {
             items.push(HoldingRecord {
@@ -130,7 +133,7 @@ impl HoldingRepository {
                 .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| format!("Failed to get Holdings of user. {}", e))?;
-        
+
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {
             items.push(HoldingRecord {
@@ -155,9 +158,10 @@ impl HoldingRepository {
             FROM holdings
             WHERE user_id = $1
             ORDER BY custodian_id, currency_id, date DESC;",
-            user_id);
-        
-        let rows = query 
+            user_id
+        );
+
+        let rows = query
             .fetch_all(&self.db_pool)
             .await
             .map_err(|e| format!("Failed to get Holdings of user. {}", e))?;
@@ -178,7 +182,7 @@ impl HoldingRepository {
             });
         }
 
-        Ok(items)        
+        Ok(items)
     }
 
     pub async fn list(&self, user_id: &str) -> Result<Vec<HoldingRecord>, String> {
@@ -186,7 +190,7 @@ impl HoldingRepository {
         /*
         sqlx::query_as!(
             HoldingRecord,
-            "SELECT id, user_id, custodian_id, currency_id, date, action, amount, note FROM Holdings WHERE user_id = $1", 
+            "SELECT id, user_id, custodian_id, currency_id, date, action, amount, note FROM Holdings WHERE user_id = $1",
             user_id)
                 .fetch_all(&self.db_pool)
                 .await
@@ -200,7 +204,7 @@ impl HoldingRepository {
                 .fetch_all(&self.db_pool)
                 .await
                 .map_err(|e| format!("Failed to get Holdings of user. {}", e))?;
-        
+
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {
             items.push(HoldingRecord {
