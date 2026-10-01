@@ -2,6 +2,18 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "📥 GIT Fetch",
+            "type": "shell",
+            "command": "git fetch --prune origin",
+            "group": "none"
+        },
+        {
+            "label": "➕ GIT push TODO task",
+            "type": "shell",
+            "command": "git add TODO.md && git commit -m 'todo: add task' && git push --force",
+            "group": "none"
+        },
+        {
             "label": "🦀 Cargo Build",
             "type": "shell",
             "options": { 
