@@ -3,10 +3,31 @@
     "tasks": [
         {
             "label": "🦀 Cargo Build",
-            "note": "sqlX requires the database up and running (Docker container)",
             "type": "shell",
-            "options": { "cwd": "${workspaceFolder}" },
+            "options": { 
+                "cwd": "${workspaceFolder}",
+                "env": { "SQLX_OFFLINE": "true" },
+            },
             "command": "cargo build",
+            "group": "build"
+        },
+        {
+            "label": "☑️ Cargo Lint",
+            "type": "shell",
+            "options": { 
+                "cwd": "${workspaceFolder}",
+            },
+            "command": "cargo fmt && cargo clippy --all-targets --all-features -- -D warnings",
+            "group": "build"
+        },
+        {
+            "label": "🧪 Cargo Test",
+            "type": "shell",
+            "options": { 
+                "cwd": "${workspaceFolder}",
+                "env": { "SQLX_OFFLINE": "true" },
+            },
+            "command": "cargo test",
             "group": "build"
         },
         {

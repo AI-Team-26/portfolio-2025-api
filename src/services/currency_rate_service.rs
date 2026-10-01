@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
-use tokio::sync::{RwLock};
+use tokio::sync::RwLock;
 
 use crate::repositories::currency_rate_repository::CurrencyRateRepository;
 use crate::repositories::schemas::currency_rate_record::CurrencyRateRecord;
@@ -32,12 +32,14 @@ impl CurrencyRateService {
             currency_service,
             coingecko_api,
             latest_rates: Arc::new(RwLock::new(Vec::<CurrencyRateRecord>::new())), // Initialize empty }
-            latest_rates_date: Arc::new(RwLock::new( Date::from_epoch_days(0).unwrap())),
+            latest_rates_date: Arc::new(RwLock::new(Date::from_epoch_days(0).unwrap())),
         }
     }
 
-    pub async fn get_rates_of_today(&self) -> Result<Vec<CurrencyRateRecord>, String> {        
-        if self.latest_rates.read().await.is_empty() || *self.latest_rates_date.read().await != today() {
+    pub async fn get_rates_of_today(&self) -> Result<Vec<CurrencyRateRecord>, String> {
+        if self.latest_rates.read().await.is_empty()
+            || *self.latest_rates_date.read().await != today()
+        {
             self.load_rates_from_coingecko().await?;
         }
 
@@ -76,10 +78,7 @@ impl CurrencyRateService {
             .collect();
 
         // We use a fixed list of coins as quote
-        let quote_ids = COINGECKO_QUOTE_IDS
-            .iter()
-            .map(|(_, cg_id)| *cg_id)
-            .collect::<Vec<_>>();
+        let quote_ids = COINGECKO_QUOTE_IDS.values().copied().collect::<Vec<_>>();
 
         let result = self.coingecko_api.get_rates(&base_ids, &quote_ids).await;
 
@@ -106,10 +105,9 @@ impl CurrencyRateService {
                                     base_currency_id: base_currency.id,
                                     quote_currency_id: quote_currency.id,
                                     date: today(),
-                                    rate: Decimal::from_f64(rate).expect(&format!(
-                                        "f64 to Decimal conversion failed for {}",
-                                        rate
-                                    )),
+                                    rate: Decimal::from_f64(rate).ok_or_else(|| {
+                                        format!("f64 to Decimal conversion failed for {rate}")
+                                    })?,
                                     source: constants::external_services::COINGECKO.to_owned(),
                                     created_at: now(),
                                 };

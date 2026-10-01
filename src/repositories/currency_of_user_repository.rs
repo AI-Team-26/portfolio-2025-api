@@ -1,5 +1,5 @@
-use sqlx::PgPool;
 use crate::repositories::schemas::currency_record::CurrencyOfUserRecord;
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct CurrencyOfUserRepository {
@@ -12,14 +12,14 @@ impl CurrencyOfUserRepository {
     }
 
     pub async fn list(&self, user_id: &str) -> Result<Vec<CurrencyOfUserRecord>, String> {
-
         let items = sqlx::query_as!(
             CurrencyOfUserRecord,
-            "SELECT id, user_id, currency_id FROM CurrenciesOfUser WHERE user_id = $1", 
-            user_id)
-                .fetch_all(&self.db_pool)
-                .await
-                .map_err(|e| format!("Failed to get Currncies of user. {}", e))?;
+            "SELECT id, user_id, currency_id FROM CurrenciesOfUser WHERE user_id = $1",
+            user_id
+        )
+        .fetch_all(&self.db_pool)
+        .await
+        .map_err(|e| format!("Failed to get Currncies of user. {}", e))?;
 
         Ok(items)
     }
@@ -55,5 +55,4 @@ impl CurrencyOfUserRepository {
         // no need to check rows affected because if 0 it was not found because already deleted
         Ok(())
     }
-
 }
