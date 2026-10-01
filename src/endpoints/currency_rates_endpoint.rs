@@ -34,7 +34,7 @@ pub async fn list_at_date(
     crate::warn!("Received date query parameter: {:?}", query);
 
     if let Err(response) = validate_request(&query) {
-        return response;
+        return *response;
     }
 
     let parsed_date = match parse_date(Some(query.date)) {

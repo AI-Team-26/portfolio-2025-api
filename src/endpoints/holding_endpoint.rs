@@ -15,7 +15,7 @@ pub async fn create(
     ValidJson(request): ValidJson<models::create::Request>,
 ) -> impl IntoResponse {
     if let Err(response) = validate_request(&request) {
-        return response;
+        return *response;
     }
 
     match state
@@ -35,7 +35,7 @@ pub async fn update(
     ValidJson(request): ValidJson<models::update::Request>,
 ) -> impl IntoResponse {
     if let Err(response) = validate_request(&request) {
-        return response;
+        return *response;
     }
 
     match state

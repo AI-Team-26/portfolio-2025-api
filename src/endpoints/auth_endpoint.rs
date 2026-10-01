@@ -20,7 +20,7 @@ pub async fn signup(
     ValidJson(request): ValidJson<signup::Request>,
 ) -> impl IntoResponse {
     if let Err(response) = validate_request(&request) {
-        return response;
+        return *response;
     }
 
     let Some(currency) = state.currency_service.try_get(request.currency_id) else {
@@ -51,7 +51,7 @@ pub async fn login(
     ValidJson(request): ValidJson<login::Request>,
 ) -> impl IntoResponse {
     if let Err(response) = validate_request(&request) {
-        return response;
+        return *response;
     }
 
     info!("login");
@@ -82,7 +82,7 @@ pub async fn refresh_token(
     ValidJson(request): ValidJson<refresh_token::Request>,
 ) -> impl IntoResponse {
     if let Err(response) = validate_request(&request) {
-        return response;
+        return *response;
     }
 
     info!("refresh_token");
