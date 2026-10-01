@@ -28,7 +28,7 @@ impl From<entities::Currency> for Currency {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, validator::Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateRequest {
     pub symbol: String,
@@ -55,7 +55,7 @@ impl CreateRequest {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, validator::Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateRequest {
     pub id: i32,
