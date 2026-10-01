@@ -15,19 +15,8 @@ use crate::{
         holding_service::HoldingService, session_service::SessionService,
         user_service::UserService, Coingecko::coingecko_api::CoingeckoApi,
     },
+    state::AppState,
 };
-
-#[derive(Clone)]
-pub struct AppState {
-    //pub config: Configuration,
-    pub user_service: UserService,
-    //pub session_service: SessionService,
-    pub auth_service: AuthService,
-    pub currency_service: CurrencyService,
-    pub custodian_service: CustodianService,
-    pub holding_service: HoldingService,
-    pub currency_rate_service: CurrencyRateService,
-}
 
 pub async fn inject_services(config: &Configuration, db_pool: PgPool) -> AppState {
     let user_repository = UserRepository::new(db_pool.clone());

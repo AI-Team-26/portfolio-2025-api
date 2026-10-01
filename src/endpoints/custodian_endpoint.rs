@@ -1,10 +1,10 @@
-use crate::dependency_injection::AppState;
 use crate::endpoints::models::custodian_models as models;
 use crate::endpoints::request_json_validator::ValidJson;
 use crate::endpoints::request_validator::RuleString;
 use crate::endpoints::response_utils::*;
 use crate::repositories::errors::ErrorKind;
 use crate::services::custodian_service::CreateError;
+use crate::state::AppState;
 use crate::utils::auth_middleware::Session;
 use crate::validate;
 use axum::extract::{Path, State};
