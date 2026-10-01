@@ -1,5 +1,5 @@
 use base64::{engine::general_purpose, Engine as _};
-use rand::RngCore;
+use rand_core::Rng;
 
 /// Cryptographically random token: 48 random bytes encoded as unpadded URL-safe base64 (64 chars).
 pub fn generate_token() -> String {

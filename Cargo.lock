@@ -1952,6 +1952,7 @@ dependencies = [
  "once_cell",
  "password-hash",
  "rand 0.10.3",
+ "rand_core 0.10.1",
  "reqwest",
  "rust_decimal",
  "serde",
