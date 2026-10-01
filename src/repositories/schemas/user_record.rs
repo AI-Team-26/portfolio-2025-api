@@ -6,5 +6,5 @@ pub struct UserRecord {
     pub hashed_password: String,
     pub creation_date: DateTime<Utc>,
     pub currency_id: i32,
-    pub role: String    
+    pub role: String,
 }
