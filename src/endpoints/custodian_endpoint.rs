@@ -71,7 +71,14 @@ pub async fn delete(
 ) -> impl IntoResponse {
     match state.custodian_service.delete(id, &session.user_id).await {
         Ok(()) => response_ok(()),
-        Err(e) if matches!(e, DatabaseError::RecordNotFound | DatabaseError::RecordNotFoundWithId(_)) => response_not_found(&e.to_string()),
+        Err(e)
+            if matches!(
+                e,
+                DatabaseError::RecordNotFound | DatabaseError::RecordNotFoundWithId(_)
+            ) =>
+        {
+            response_not_found(&e.to_string())
+        }
         Err(e) => response_error(&e.to_string()),
     }
 }

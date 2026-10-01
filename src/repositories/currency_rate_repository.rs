@@ -1,5 +1,8 @@
 use crate::{
-    repositories::{errors::DatabaseError, helpers::from_rust_decimal, schemas::currency_rate_record::CurrencyRateRecord},
+    repositories::{
+        errors::DatabaseError, helpers::from_rust_decimal,
+        schemas::currency_rate_record::CurrencyRateRecord,
+    },
     utils::datetime::Date,
 };
 use sqlx::PgPool;

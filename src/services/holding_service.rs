@@ -35,7 +35,11 @@ impl HoldingService {
         }
     }
 
-    pub async fn create(&self, user_id: &str, request: create::Request) -> Result<i32, DatabaseError> {
+    pub async fn create(
+        &self,
+        user_id: &str,
+        request: create::Request,
+    ) -> Result<i32, DatabaseError> {
         let record: HoldingRecord = (request, user_id).into();
         self.repository.create(record).await
     }
@@ -54,11 +58,18 @@ impl HoldingService {
         self.repository.delete(id, user_id).await
     }
 
-    pub async fn single_for_user(&self, user_id: &str, id: i32) -> Result<HoldingRecord, DatabaseError> {
+    pub async fn single_for_user(
+        &self,
+        user_id: &str,
+        id: i32,
+    ) -> Result<HoldingRecord, DatabaseError> {
         self.repository.single_for_user(id, user_id).await
     }
 
-    pub async fn list_last_balance(&self, user: &User) -> Result<Vec<search::Response>, DatabaseError> {
+    pub async fn list_last_balance(
+        &self,
+        user: &User,
+    ) -> Result<Vec<search::Response>, DatabaseError> {
         let records = self.repository.list_last_balance(&user.id).await?;
 
         self.add_amount_in_main_currency(&records, &user.currency)

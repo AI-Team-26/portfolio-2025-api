@@ -15,8 +15,9 @@ pub fn to_rust_decimal(bd: BigDecimal) -> Result<Decimal, DatabaseError> {
 
 pub fn parse_decimal_for_sqlx(value: Option<BigDecimal>) -> Result<Decimal, sqlx::Error> {
     match value {
-        Some(bd) => Decimal::from_str(&bd.to_string())
-            .map_err(|e| sqlx::Error::Decode(Box::new(e))),
+        Some(bd) => {
+            Decimal::from_str(&bd.to_string()).map_err(|e| sqlx::Error::Decode(Box::new(e)))
+        }
         None => Ok(Decimal::ZERO),
     }
 }

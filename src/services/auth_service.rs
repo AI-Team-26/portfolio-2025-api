@@ -78,11 +78,7 @@ impl AuthService {
     }
 
     pub async fn login(&self, request: LoginRequest) -> Result<Session, LoginError> {
-        let Some(user) = self
-            .user_service
-            .find_by_username(request.username)
-            .await?
-        else {
+        let Some(user) = self.user_service.find_by_username(request.username).await? else {
             return Err(LoginError::FailedLogin);
         };
 

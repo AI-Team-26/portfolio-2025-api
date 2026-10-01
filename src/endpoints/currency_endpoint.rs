@@ -40,7 +40,14 @@ pub async fn update(
 pub async fn delete(State(state): State<AppState>, Path(id): Path<i32>) -> impl IntoResponse {
     match state.currency_service.delete(id).await {
         Ok(()) => response_ok_no_data(),
-        Err(e) if matches!(e, DatabaseError::RecordNotFound | DatabaseError::RecordNotFoundWithId(_)) => response_not_found(&e.to_string()),
+        Err(e)
+            if matches!(
+                e,
+                DatabaseError::RecordNotFound | DatabaseError::RecordNotFoundWithId(_)
+            ) =>
+        {
+            response_not_found(&e.to_string())
+        }
         Err(e) => response_error(&e.to_string()),
     }
 }

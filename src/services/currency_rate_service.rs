@@ -36,7 +36,9 @@ impl CurrencyRateService {
         }
     }
 
-    pub async fn get_rates_of_today(&self) -> Result<Vec<CurrencyRateRecord>, crate::repositories::errors::DatabaseError> {
+    pub async fn get_rates_of_today(
+        &self,
+    ) -> Result<Vec<CurrencyRateRecord>, crate::repositories::errors::DatabaseError> {
         if self.latest_rates.read().await.is_empty()
             || *self.latest_rates_date.read().await != today()
         {
@@ -46,7 +48,10 @@ impl CurrencyRateService {
         Ok(self.latest_rates.read().await.clone())
     }
 
-    pub async fn create(&self, record: &CurrencyRateRecord) -> Result<(), crate::repositories::errors::DatabaseError> {
+    pub async fn create(
+        &self,
+        record: &CurrencyRateRecord,
+    ) -> Result<(), crate::repositories::errors::DatabaseError> {
         self.repository.create(record).await
     }
 
@@ -61,7 +66,10 @@ impl CurrencyRateService {
             .await
     }
 
-    pub async fn list_at_date(&self, date: Date) -> Result<Vec<CurrencyRateRecord>, crate::repositories::errors::DatabaseError> {
+    pub async fn list_at_date(
+        &self,
+        date: Date,
+    ) -> Result<Vec<CurrencyRateRecord>, crate::repositories::errors::DatabaseError> {
         self.repository.list_at_date(date).await
     }
 
@@ -69,7 +77,9 @@ impl CurrencyRateService {
     /// Coingecko uses its ids to identify Base currencies and has only some ids marked valid as Quote currencies.
     /// Base currencies are Cypto and stable coin, and Quote currencies are fiat.
     /// We use a fixed map for mapping Coingecko currency ID to currency symbols.    
-    pub async fn load_rates_from_coingecko(&self) -> Result<Vec<CurrencyRateRecord>, crate::repositories::errors::DatabaseError> {
+    pub async fn load_rates_from_coingecko(
+        &self,
+    ) -> Result<Vec<CurrencyRateRecord>, crate::repositories::errors::DatabaseError> {
         let base_ids: Vec<String> = self
             .currency_service
             .crypto_and_stable_currencies
@@ -106,7 +116,9 @@ impl CurrencyRateService {
                                     quote_currency_id: quote_currency.id,
                                     date: today(),
                                     rate: Decimal::from_f64(rate).ok_or_else(|| {
-                                        crate::repositories::errors::DatabaseError::generic(format!("f64 to Decimal conversion failed for {rate}"))
+                                        crate::repositories::errors::DatabaseError::generic(
+                                            format!("f64 to Decimal conversion failed for {rate}"),
+                                        )
                                     })?,
                                     source: constants::external_services::COINGECKO.to_owned(),
                                     created_at: now(),
@@ -130,7 +142,9 @@ impl CurrencyRateService {
 
                 Ok(new_rates)
             }
-            Err(e) => Err(crate::repositories::errors::DatabaseError::generic(format!("Failed to get rates. {}", e))),
+            Err(e) => Err(crate::repositories::errors::DatabaseError::generic(
+                format!("Failed to get rates. {}", e),
+            )),
         }
     }
 }

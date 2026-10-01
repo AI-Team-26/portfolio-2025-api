@@ -81,7 +81,11 @@ impl HoldingRepository {
         self.check_result(result)
     }
 
-    pub async fn single_for_user(&self, id: i32, user_id: &str) -> Result<HoldingRecord, DatabaseError> {
+    pub async fn single_for_user(
+        &self,
+        id: i32,
+        user_id: &str,
+    ) -> Result<HoldingRecord, DatabaseError> {
         let row =
             sqlx::query!(
                 "SELECT id, user_id, custodian_id, currency_id, date, action, amount, note FROM Holdings 
@@ -105,7 +109,10 @@ impl HoldingRepository {
         Ok(record)
     }
 
-    pub async fn list_last_balance(&self, user_id: &str) -> Result<Vec<HoldingRecord>, DatabaseError> {
+    pub async fn list_last_balance(
+        &self,
+        user_id: &str,
+    ) -> Result<Vec<HoldingRecord>, DatabaseError> {
         let query = sqlx::query!(
             "SELECT DISTINCT ON (custodian_id, currency_id) 
                 id, user_id, custodian_id, currency_id, date, action, amount, note

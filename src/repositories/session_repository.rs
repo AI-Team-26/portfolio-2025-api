@@ -1,7 +1,7 @@
+use crate::repositories::errors::DatabaseError;
 use crate::repositories::schemas::session_record::{
     SessionRecord, SessionWithUser, UpdateForAccess, UpdateForRefresh,
 };
-use crate::repositories::errors::DatabaseError;
 use crate::warn;
 use sqlx::{PgPool, Row};
 
@@ -101,7 +101,10 @@ impl SessionRepository {
         .map_err(DatabaseError::from)
     }
 
-    pub async fn exists_by_refresh_token(&self, refresh_token: &str) -> Result<bool, DatabaseError> {
+    pub async fn exists_by_refresh_token(
+        &self,
+        refresh_token: &str,
+    ) -> Result<bool, DatabaseError> {
         // First check if the record exists
         let exists = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM Sessions WHERE TRIM(refresh_token) = TRIM($1))"#,

@@ -45,7 +45,10 @@ impl UserRepository {
         .map_err(DatabaseError::from)
     }
 
-    pub async fn find_by_username(&self, username: String) -> Result<Option<UserRecord>, DatabaseError> {
+    pub async fn find_by_username(
+        &self,
+        username: String,
+    ) -> Result<Option<UserRecord>, DatabaseError> {
         sqlx::query_as!(
             UserRecord,
             "SELECT id, username, hashed_password, creation_date, currency_id, role 
@@ -57,7 +60,11 @@ impl UserRepository {
         .map_err(DatabaseError::from)
     }
 
-    pub async fn update_currency(&self, user_id: String, currency_id: i32) -> Result<(), DatabaseError> {
+    pub async fn update_currency(
+        &self,
+        user_id: String,
+        currency_id: i32,
+    ) -> Result<(), DatabaseError> {
         sqlx::query!(
             r#"
                 UPDATE users
