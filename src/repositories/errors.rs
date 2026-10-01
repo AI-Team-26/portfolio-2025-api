@@ -9,6 +9,7 @@ pub enum DatabaseError {
     RecordNotFound,
 
     #[error("Record not found with ID: {0}")]
+    #[allow(dead_code)]
     RecordNotFoundWithId(i32),
 
     #[error("Database error: {0}")]
@@ -24,6 +25,7 @@ impl DatabaseError {
         DatabaseError::RecordNotFound
     }
 
+    #[allow(dead_code)]
     pub fn record_not_found_with_id(id: i32) -> Self {
         DatabaseError::RecordNotFoundWithId(id)
     }
