@@ -1,4 +1,6 @@
+use chrono::{DateTime, Utc};
 use serde::Serialize;
+use validator::ValidationError;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -6,6 +8,39 @@ pub struct ErrorResponse {
     pub error: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
+}
+
+pub fn valid_custodian_kind(value: &str) -> Result<(), ValidationError> {
+    if crate::entities::custodian::KINDS.contains(&value) {
+        Ok(())
+    } else {
+        let mut error = ValidationError::new("invalid_custodian_kind");
+        error.message = Some("is not a valid custodian kind".into());
+        Err(error)
+    }
+}
+
+pub fn not_in_future(value: &DateTime<Utc>) -> Result<(), ValidationError> {
+    if *value <= Utc::now() {
+        Ok(())
+    } else {
+        let mut error = ValidationError::new("date_in_future");
+        error.message = Some("cannot be in the future".into());
+        Err(error)
+    }
+}
+
+pub fn not_zero<T>(value: &T) -> Result<(), ValidationError>
+where
+    T: Default + PartialEq,
+{
+    if *value == T::default() {
+        let mut error = ValidationError::new("zero");
+        error.message = Some("cannot be zero".into());
+        Err(error)
+    } else {
+        Ok(())
+    }
 }
 
 impl ErrorResponse {

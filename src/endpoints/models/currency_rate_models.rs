@@ -26,12 +26,13 @@ impl From<CurrencyRateRecord> for CurrencyRate {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, validator::Validate)]
 pub struct AtDateQuery {
+    #[validate(length(min = 1))]
     pub date: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, validator::Validate)]
 pub struct SinglePairQuery {
     pub base: i32,
     pub quote: i32,

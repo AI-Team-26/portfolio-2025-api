@@ -5,14 +5,16 @@ mod upsert {
         repositories::schemas::holding_record::HoldingRecord, utils::datetime::UtcDateTime,
     };
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, validator::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Request {
         pub custodian_id: i32,
         pub currency_id: i32,
 
+        #[validate(custom(function = "crate::endpoints::models::common::not_in_future"))]
         pub date: UtcDateTime,
         pub action: String,
+        #[validate(custom(function = "crate::endpoints::models::common::not_zero"))]
         pub amount: Decimal,
         pub note: Option<String>,
     }

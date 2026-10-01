@@ -1,11 +1,9 @@
 use crate::endpoints::models::holding_models as models;
 use crate::endpoints::request_json_validator::ValidJson;
-use crate::endpoints::request_validator::RuleNumber;
 use crate::endpoints::response_utils::*;
 use crate::repositories::errors::ErrorKind;
 use crate::state::AppState;
 use crate::utils::auth_middleware::Session;
-use crate::validate;
 use axum::extract::State;
 use axum::extract::{Path, Query};
 use axum::response::IntoResponse;
@@ -16,10 +14,9 @@ pub async fn create(
     Extension(session): Session,
     ValidJson(request): ValidJson<models::create::Request>,
 ) -> impl IntoResponse {
-    validate!(
-        //"Name", request.date, RuleString::NotEmpty;
-        "Amount", request.amount, RuleNumber::NotZero;
-    );
+    if let Err(response) = validate_request(&request) {
+        return *response;
+    }
 
     match state
         .holding_service
@@ -37,10 +34,9 @@ pub async fn update(
     Path(id): Path<i32>,
     ValidJson(request): ValidJson<models::update::Request>,
 ) -> impl IntoResponse {
-    validate!(
-        //"Name", request.date, RuleString::NotEmpty;
-        "Amount", request.amount, RuleNumber::NotZero;
-    );
+    if let Err(response) = validate_request(&request) {
+        return *response;
+    }
 
     match state
         .holding_service

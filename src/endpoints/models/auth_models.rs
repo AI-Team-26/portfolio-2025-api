@@ -1,10 +1,12 @@
 pub mod signup {
     use crate::endpoints::models::common;
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, validator::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Request {
+        #[validate(length(min = 1))]
         pub username: String,
+        #[validate(length(min = 1))]
         pub password: String,
         pub currency_id: i32,
     }
@@ -15,10 +17,12 @@ pub mod signup {
 pub mod login {
     use crate::{entities::session::Session, utils::datetime::UtcDateTime};
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, validator::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Request {
+        #[validate(length(min = 1))]
         pub username: String,
+        #[validate(length(min = 1))]
         pub password: String,
     }
 
@@ -60,9 +64,10 @@ pub mod refresh_token {
         repositories::schemas::session_record::SessionRecord, utils::datetime::UtcDateTime,
     };
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, validator::Validate)]
     #[serde(rename_all = "camelCase")]
     pub struct Request {
+        #[validate(length(min = 1))]
         pub refresh_token: String,
     }
 

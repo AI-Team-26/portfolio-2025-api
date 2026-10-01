@@ -1,4 +1,4 @@
-use crate::{endpoints::request_validator::RuleString, info, validate};
+use crate::info;
 
 use crate::{
     endpoints::{models::auth_models::refresh_token, request_json_validator::ValidJson},
@@ -19,11 +19,9 @@ pub async fn signup(
     State(state): State<AppState>,
     ValidJson(request): ValidJson<signup::Request>,
 ) -> impl IntoResponse {
-    validate!(
-        //"Name", request.date, RuleString::NotEmpty;
-        "Username", &request.username, RuleString::NotEmpty;
-        "Password", &request.password, RuleString::NotEmpty;
-    );
+    if let Err(response) = validate_request(&request) {
+        return *response;
+    }
 
     let Some(currency) = state.currency_service.try_get(request.currency_id) else {
         return response_bad_request(&format!(
@@ -52,7 +50,10 @@ pub async fn login(
     State(state): State<AppState>,
     ValidJson(request): ValidJson<login::Request>,
 ) -> impl IntoResponse {
-    //tracing::info!("🔥 LOGIN ENDPOINT HIT");  // Add this
+    if let Err(response) = validate_request(&request) {
+        return *response;
+    }
+
     info!("login");
 
     let username = request.username.trim().to_string();
@@ -80,6 +81,10 @@ pub async fn refresh_token(
     State(state): State<AppState>,
     ValidJson(request): ValidJson<refresh_token::Request>,
 ) -> impl IntoResponse {
+    if let Err(response) = validate_request(&request) {
+        return *response;
+    }
+
     info!("refresh_token");
     match state
         .auth_service

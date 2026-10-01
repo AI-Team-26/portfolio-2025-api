@@ -6,9 +6,7 @@ use crate::endpoints::helper::parse_date;
 use crate::endpoints::models::currency_rate_models as models;
 use crate::state::AppState;
 
-use crate::endpoints::request_validator::RuleString;
-use crate::endpoints::response_utils::{response_bad_request, response_ok_map};
-use crate::validate;
+use crate::endpoints::response_utils::{response_bad_request, response_ok_map, validate_request};
 
 pub async fn single_for_pair(
     State(state): State<AppState>,
@@ -35,7 +33,9 @@ pub async fn list_at_date(
     crate::info!("curerncy-rates list_at_date");
     crate::warn!("Received date query parameter: {:?}", query);
 
-    validate!("date", &query.date, RuleString::NotEmpty);
+    if let Err(response) = validate_request(&query) {
+        return *response;
+    }
 
     let parsed_date = match parse_date(Some(query.date)) {
         Ok(Some(d)) => d,
