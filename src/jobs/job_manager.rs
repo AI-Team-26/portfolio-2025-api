@@ -1,6 +1,6 @@
 use crate::{
     configuration::Configuration, info, jobs::update_currency_rates_job::UpdateCurrencyRatesJob,
-    utils::dependency_injection::AppState,
+    state::AppState,
 };
 use async_trait::async_trait;
 use tokio_cron_scheduler::{Job, JobScheduler};

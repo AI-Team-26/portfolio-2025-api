@@ -1,4 +1,4 @@
-use crate::dependency_injection::AppState;
+use crate::state::AppState;
 use crate::endpoints::models::holding_models as models;
 use crate::endpoints::request_json_validator::ValidJson;
 use crate::endpoints::request_validator::RuleNumber;

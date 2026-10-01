@@ -4,7 +4,7 @@ use crate::{
     },
     repositories::schemas::session_record::SessionWithUser,
     services::auth_service::AuthError,
-    utils::dependency_injection::AppState,
+    state::AppState,
 };
 use axum::{body::Body, extract::State, http::Request, middleware::Next, response::IntoResponse};
 

@@ -8,11 +8,11 @@ use axum::{extract::State, response::IntoResponse};
 
 use crate::services::user_service::CreateError;
 use crate::{
-    dependency_injection::AppState,
     endpoints::{
         models::auth_models::{login, signup},
         response_utils::*,
     },
+    state::AppState,
 };
 
 pub async fn signup(

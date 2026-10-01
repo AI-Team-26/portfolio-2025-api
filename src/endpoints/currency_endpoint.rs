@@ -3,7 +3,7 @@ use axum::{extract::Path, extract::State, response::IntoResponse, Extension};
 use super::response_utils::{
     response_bad_request, response_created_new_id, response_error, response_not_found, response_ok,
 };
-use crate::dependency_injection::AppState;
+use crate::state::AppState;
 use crate::endpoints::models::currency_models as models;
 use crate::endpoints::request_json_validator::ValidJson;
 
