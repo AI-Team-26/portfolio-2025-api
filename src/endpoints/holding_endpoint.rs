@@ -8,15 +8,14 @@ use axum::extract::State;
 use axum::extract::{Path, Query};
 use axum::response::IntoResponse;
 use axum::Extension;
-use validator::Validate;
 
 pub async fn create(
     State(state): State<AppState>,
     Extension(session): Session,
     ValidJson(request): ValidJson<models::create::Request>,
 ) -> impl IntoResponse {
-    if let Err(errors) = request.validate() {
-        return response_validation_errors(&errors);
+    if let Err(response) = validate_request(&request) {
+        return response;
     }
 
     match state
@@ -35,8 +34,8 @@ pub async fn update(
     Path(id): Path<i32>,
     ValidJson(request): ValidJson<models::update::Request>,
 ) -> impl IntoResponse {
-    if let Err(errors) = request.validate() {
-        return response_validation_errors(&errors);
+    if let Err(response) = validate_request(&request) {
+        return response;
     }
 
     match state

@@ -2,7 +2,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::Serialize;
-use validator::ValidationErrors;
+use validator::{Validate, ValidationErrors};
 
 use crate::constants;
 use crate::endpoints::models::common::{ErrorResponse, NewIdResponse, ValidationErrorsResponse};
@@ -39,6 +39,12 @@ pub fn response_error(message: &str) -> Response {
 
 pub fn response_bad_request(message: &str) -> Response {
     response_error_code(StatusCode::BAD_REQUEST, message, None)
+}
+
+pub fn validate_request<T: Validate>(request: &T) -> Result<(), Response> {
+    request
+        .validate()
+        .map_err(|errors| response_validation_errors(&errors))
 }
 
 pub fn response_validation_errors(errors: &ValidationErrors) -> Response {

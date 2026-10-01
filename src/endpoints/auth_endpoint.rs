@@ -1,5 +1,4 @@
 use crate::info;
-use validator::Validate;
 
 use crate::{
     endpoints::{models::auth_models::refresh_token, request_json_validator::ValidJson},
@@ -20,8 +19,8 @@ pub async fn signup(
     State(state): State<AppState>,
     ValidJson(request): ValidJson<signup::Request>,
 ) -> impl IntoResponse {
-    if let Err(errors) = request.validate() {
-        return response_validation_errors(&errors);
+    if let Err(response) = validate_request(&request) {
+        return response;
     }
 
     let Some(currency) = state.currency_service.try_get(request.currency_id) else {
@@ -51,8 +50,8 @@ pub async fn login(
     State(state): State<AppState>,
     ValidJson(request): ValidJson<login::Request>,
 ) -> impl IntoResponse {
-    if let Err(errors) = request.validate() {
-        return response_validation_errors(&errors);
+    if let Err(response) = validate_request(&request) {
+        return response;
     }
 
     info!("login");
@@ -82,8 +81,8 @@ pub async fn refresh_token(
     State(state): State<AppState>,
     ValidJson(request): ValidJson<refresh_token::Request>,
 ) -> impl IntoResponse {
-    if let Err(errors) = request.validate() {
-        return response_validation_errors(&errors);
+    if let Err(response) = validate_request(&request) {
+        return response;
     }
 
     info!("refresh_token");
