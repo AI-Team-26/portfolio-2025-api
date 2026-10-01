@@ -1,5 +1,8 @@
-use sqlx::{PgPool};
-use crate::{repositories::{helpers::from_rust_decimal, schemas::currency_rate_record::CurrencyRateRecord}, utils::datetime::Date};
+use crate::{
+    repositories::{helpers::from_rust_decimal, schemas::currency_rate_record::CurrencyRateRecord},
+    utils::datetime::Date,
+};
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct CurrencyRateRepository {
@@ -34,7 +37,12 @@ impl CurrencyRateRepository {
         Ok(())
     }
 
-    pub async fn search(&self, base_currency_id: i32, quote_currency_id: i32, date: Option<Date>) -> Result<Vec<CurrencyRateRecord>, String> {        
+    pub async fn search(
+        &self,
+        base_currency_id: i32,
+        quote_currency_id: i32,
+        date: Option<Date>,
+    ) -> Result<Vec<CurrencyRateRecord>, String> {
         let rates = sqlx::query_as::<_, CurrencyRateRecord>(
             r#"
             SELECT base_currency_id, quote_currency_id, date, source, rate, created_at
@@ -51,19 +59,19 @@ impl CurrencyRateRepository {
         Ok(rates)
     }
 
-    pub async fn list_at_date(&self, date: Date) -> Result<Vec<CurrencyRateRecord>, String> {        
+    pub async fn list_at_date(&self, date: Date) -> Result<Vec<CurrencyRateRecord>, String> {
         let rates = sqlx::query_as::<_, CurrencyRateRecord>(
             r#"
             SELECT base_currency_id, quote_currency_id, date, source, rate::numeric, created_at
             FROM CurrencyRates
             WHERE date = $1
-            "#)
-            .bind(date)
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(|e:sqlx::Error| e.to_string())?;
+            "#,
+        )
+        .bind(date)
+        .fetch_all(&self.db_pool)
+        .await
+        .map_err(|e: sqlx::Error| e.to_string())?;
 
         Ok(rates)
     }
-
 }

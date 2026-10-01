@@ -1,11 +1,14 @@
+use crate::{
+    entities::{currency::Currency, custodian::Custodian, user::User},
+    repositories::schemas::holding_record::HoldingRecord,
+    utils::datetime::UtcDateTime,
+};
 use rust_decimal::Decimal;
 use sqlx::Type;
-use crate::{entities::{currency::Currency, custodian::Custodian, user::User}, repositories::schemas::holding_record::HoldingRecord, utils::datetime::UtcDateTime};
-
 
 pub struct Holding {
     pub id: i32,
-    
+
     pub user: User,
     pub custodian: Custodian,
     pub currency: Currency,
@@ -13,13 +16,13 @@ pub struct Holding {
     pub date: UtcDateTime,
     pub action: HoldingAction,
     pub amount: Decimal,
-    pub note: Option<String>,    
+    pub note: Option<String>,
 }
 
 #[derive(Debug, Clone, Type, serde::Serialize)]
 pub enum HoldingAction {
     #[sqlx(rename = "Balance At")]
-    BalanceAt,   // A snapshot as reported at a date
+    BalanceAt, // A snapshot as reported at a date
     Deposit,
     //Withdrawal,
     //Adjustment,
@@ -35,13 +38,13 @@ impl From<Holding> for HoldingRecord {
             date: entity.date,
             action: entity.action.to_string(),
             amount: entity.amount,
-            note: entity.note
+            note: entity.note,
         }
     }
 }
 
 impl HoldingAction {
-    /* 
+    /*
     pub fn from_string(action: &str) -> Result<Self, String> {
         match action {
             "Balance At" => Ok(HoldingAction::BalanceAt),

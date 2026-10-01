@@ -1,8 +1,11 @@
-use sqlx::{ PgPool};
-use crate::{entities::custodian::{Custodian, CustodianKind}, repositories::{errors::DatabaseError, repository_traits::BaseRepository}};
+use crate::{
+    entities::custodian::{Custodian, CustodianKind},
+    repositories::{errors::DatabaseError, repository_traits::BaseRepository},
+};
+use sqlx::PgPool;
 
 #[derive(Clone)]
-pub struct CustodianRepository  {
+pub struct CustodianRepository {
     db_pool: PgPool,
 }
 
@@ -14,7 +17,7 @@ impl CustodianRepository {
     }
 
     pub async fn create(&self, custodian: Custodian) -> Result<i32, DatabaseError> {
-        /*  this returns an anonymous struct a dynamic 
+        /*  this returns an anonymous struct a dynamic
         let result = sqlx::query!(
             r#"
                 INSERT INTO Custodian (name, kind, description, url, wallet_address, account_country_code)
@@ -75,17 +78,20 @@ impl CustodianRepository {
         self.check_result(result)
     }
 
-    pub async fn delete(&self, id:i32, user_id: &str) -> Result<(), DatabaseError> {
+    pub async fn delete(&self, id: i32, user_id: &str) -> Result<(), DatabaseError> {
         let result = sqlx::query!(
-            r#"delete from Custodians where id = $1 and user_id = $2"#, id, user_id)
-            .execute(&self.db_pool)
-            .await
-            .map_err(|e| DatabaseError::generic(e.to_string()))?;
-        
+            r#"delete from Custodians where id = $1 and user_id = $2"#,
+            id,
+            user_id
+        )
+        .execute(&self.db_pool)
+        .await
+        .map_err(|e| DatabaseError::generic(e.to_string()))?;
+
         self.check_result(result)
     }
 
-    pub async fn single(&self, id:i32, user_id: &str) -> Result<Custodian, String> {
+    pub async fn single(&self, id: i32, user_id: &str) -> Result<Custodian, String> {
         let item =
             sqlx::query_as!(
                 Custodian,
@@ -113,4 +119,3 @@ impl CustodianRepository {
         Ok(custodians)
     }
 }
-

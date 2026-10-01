@@ -1,6 +1,6 @@
-use sqlx::PgPool;
 use crate::entities::user::User;
 use crate::repositories::schemas::user_record::UserRecord;
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct UserRepository {
@@ -24,7 +24,7 @@ impl UserRepository {
             user.hashed_password,
             user.creation_date,
             user.currency.id,
-            user.role  
+            user.role
         )
         .execute(&self.db_pool)
         .await
@@ -37,22 +37,24 @@ impl UserRepository {
         sqlx::query_as!(
             UserRecord,
             "SELECT id, username, hashed_password, creation_date, currency_id, role
-            FROM users WHERE id = $1", 
-            id)
-                .fetch_optional(&self.db_pool)
-                .await
-                .map_err(|e| format!("Failed to get User by id. {}", e))
+            FROM users WHERE id = $1",
+            id
+        )
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(|e| format!("Failed to get User by id. {}", e))
     }
 
     pub async fn find_by_username(&self, username: String) -> Result<Option<UserRecord>, String> {
         sqlx::query_as!(
             UserRecord,
             "SELECT id, username, hashed_password, creation_date, currency_id, role 
-            FROM users WHERE username = $1", 
-            username)
-                .fetch_optional(&self.db_pool)
-                .await
-                .map_err(|e| format!("Failed to get User by username. {}", e))
+            FROM users WHERE username = $1",
+            username
+        )
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(|e| format!("Failed to get User by username. {}", e))
     }
 
     pub async fn update_currency(&self, user_id: String, currency_id: i32) -> Result<(), String> {

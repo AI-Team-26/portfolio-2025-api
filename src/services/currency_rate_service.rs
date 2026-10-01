@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
-use tokio::sync::{RwLock};
+use tokio::sync::RwLock;
 
 use crate::repositories::currency_rate_repository::CurrencyRateRepository;
 use crate::repositories::schemas::currency_rate_record::CurrencyRateRecord;
@@ -32,12 +32,14 @@ impl CurrencyRateService {
             currency_service,
             coingecko_api,
             latest_rates: Arc::new(RwLock::new(Vec::<CurrencyRateRecord>::new())), // Initialize empty }
-            latest_rates_date: Arc::new(RwLock::new( Date::from_epoch_days(0).unwrap())),
+            latest_rates_date: Arc::new(RwLock::new(Date::from_epoch_days(0).unwrap())),
         }
     }
 
-    pub async fn get_rates_of_today(&self) -> Result<Vec<CurrencyRateRecord>, String> {        
-        if self.latest_rates.read().await.is_empty() || *self.latest_rates_date.read().await != today() {
+    pub async fn get_rates_of_today(&self) -> Result<Vec<CurrencyRateRecord>, String> {
+        if self.latest_rates.read().await.is_empty()
+            || *self.latest_rates_date.read().await != today()
+        {
             self.load_rates_from_coingecko().await?;
         }
 

@@ -1,19 +1,19 @@
 use sqlx::{FromRow, Type};
 
 pub const KINDS: &[&str] = &[
-    "Bank",                      // HSBC, Revolut
-    "Exchange",                  // Binance
-    "Fintech Platform",          // Wise, Nexo
-    "Pension",                   // Aviva
-    "Blockchain Wallet",         // Ethereum address, Bitcoin address, Radix account
-    "Broker",                    // Trading 212, eToro
-    "Payment Platform",          // PayPal, Stripe
+    "Bank",              // HSBC, Revolut
+    "Exchange",          // Binance
+    "Fintech Platform",  // Wise, Nexo
+    "Pension",           // Aviva
+    "Blockchain Wallet", // Ethereum address, Bitcoin address, Radix account
+    "Broker",            // Trading 212, eToro
+    "Payment Platform",  // PayPal, Stripe
     "Other",
 ];
 // let owned: Vec<String> = KINDS.iter().map(|s| s.to_string()).collect();
 
 #[derive(FromRow, Debug, Clone, serde::Serialize)]
-#[serde(rename_all ="camelCase")] 
+#[serde(rename_all = "camelCase")]
 pub struct Custodian {
     pub id: i32,
     pub user_id: String,
@@ -22,7 +22,7 @@ pub struct Custodian {
     pub account: Option<String>,
     pub kind: CustodianKind,
     pub color_code: String,
-    pub description: Option<String>
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone, Type, serde::Serialize)]
@@ -38,7 +38,7 @@ pub enum CustodianKind {
     Broker,
     #[sqlx(rename = "Payment Platform")]
     PaymentPlatform,
-    Other
+    Other,
 }
 
 impl CustodianKind {

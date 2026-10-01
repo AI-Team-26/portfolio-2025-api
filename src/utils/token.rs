@@ -35,6 +35,8 @@ mod tests {
     #[test]
     fn generate_token_uses_url_safe_alphabet() {
         let token = generate_token();
-        assert!(token.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'));
+        assert!(token
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'));
     }
 }

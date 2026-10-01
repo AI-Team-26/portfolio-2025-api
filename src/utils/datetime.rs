@@ -3,14 +3,13 @@
 //
 // usage:
 // UtcDateTime::now()
-// UtcDateTime::try_from(date as string) 
+// UtcDateTime::try_from(date as string)
 
-use chrono::{DateTime, Utc, NaiveDate, NaiveTime};
+use chrono::{DateTime, NaiveDate, NaiveTime, Utc};
 
 // type alias (does not allow impl)
 pub type UtcDateTime = DateTime<Utc>;
 pub type Date = chrono::NaiveDate; // Datetime without timezone
-
 
 pub fn now() -> UtcDateTime {
     chrono::Utc::now()
@@ -24,28 +23,30 @@ pub fn try_from(s: String) -> Result<UtcDateTime, String> {
     if let Ok(dt) = DateTime::parse_from_rfc3339(&s) {
         return Ok(dt.with_timezone(&Utc));
     }
-    
+
     if let Ok(dt) = DateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S%.fZ") {
         return Ok(dt.with_timezone(&Utc));
     }
-    
+
     if let Ok(dt) = DateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%SZ") {
         return Ok(dt.with_timezone(&Utc));
     }
-    
+
     if let Ok(date) = NaiveDate::parse_from_str(&s, "%Y-%m-%d") {
         let naive_datetime = date.and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap());
-        return Ok(DateTime::<Utc>::from_naive_utc_and_offset(naive_datetime, Utc));
+        return Ok(DateTime::<Utc>::from_naive_utc_and_offset(
+            naive_datetime,
+            Utc,
+        ));
     }
-    
+
     Err(format!("Unable to parse datetime from string: {}", s))
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{Utc, Datelike, Timelike};
+    use chrono::{Datelike, Timelike, Utc};
 
     #[test]
     fn now_returns_current_time() {
@@ -95,15 +96,14 @@ mod tests {
     }
 }
 
-
 //use serde::{Deserialize, Serialize};
 //use sqlx::types::time::OffsetDateTime;
 
 //pub use sqlx::types::time::OffsetDateTime as UtcDateTime;
 
 /*
-pub fn utc_now() -> OffsetDateTime { 
-    OffsetDateTime::now_utc() 
+pub fn utc_now() -> OffsetDateTime {
+    OffsetDateTime::now_utc()
 }*/
 
 //#[derive(Debug, Clone, Copy)]
@@ -117,7 +117,7 @@ impl UtcDateTime {
     }
 
     //pub fn utc() -> Self { OffsetDateTime::now_utc() }
-    
+
     // Deref to inner type for database operations (OffsetDateTime is )
     pub fn as_timestamptz(&self) -> OffsetDateTime {
         self.0
