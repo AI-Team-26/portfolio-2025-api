@@ -18,3 +18,18 @@
 
 - Feature 9 [fix/09_session_client_metadata] Populate real client metadata at login (auth_endpoint.rs currently stores empty strings): read IP from X-Forwarded-For first hop (trusted-proxy chain:
  Cloudflare → nginx; consider Cf-Connecting-Ip as primary since Cloudflare sets it authoritatively) and User-Agent from headers into LoginRequest; validate non-empty before persisting to Sessions
+
+- Feature 10 [feat/10_health_endpoint] Add GET /health endpoint returning 200 "OK". Two-tier design: (a) liveness probe — always 200 when process is up, used by orchestrators to decide restarts; (b)
+ readiness check via ?ready=true query param (or separate /readyz route) that runs SELECT 1 against PgPool with short timeout (~2s) and returns 503 if DB unreachable. Register route before auth middleware so
+ it's unauthenticated. Update Dockerfile HEALTHCHECK to curl /health. Document expected behavior behind Cloudflare/nginx (proxy should bypass cache for this route).
+
+- Feature 11 [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
+ (http_requests_total{method,route,status}, http_request_duration_seconds), in-flight requests gauge, and sqlx pool gauges (size, idle, waiting_tasks) polled from PgPoolMetrics — enables measuring pool
+ saturation to inform refactor/08_db_pool_tuning values. Route must be excluded from auth middleware; restrict access at nginx level (allow internal network/scrapers only, deny public) since metric labels can
+ leak info. Add scrape interval guidance (15-30s) and note that /metrics responses must not be cached by Cloudflare.
+
+- Feature 12 [feat/12_opentelemetry_tracing] Integrate distributed tracing: add opentelemetry, opentelemetry_sdk, opentelemetry-otlp, tracing-opentelemetry deps. Create TracerProvider with OTLP exporter
+ (endpoint configurable via config layer, e.g. OTEL_EXPORTER_OTLP_ENDPOINT env var); wrap tokio runtime with tracer subscriber so existing tracing spans propagate W3C traceparent headers on outbound HTTP
+ calls (Coingecko API client) and inject TraceId into the existing JSON logging format (tracing-subscriber json writer customizer or field injection) so every log line carries the trace ID even without a
+ collector deployed. Phase 1 (this PR): local span hierarchy (HTTP handler → service → repository SQL) + trace ID in logs. Phase 2 (follow-up, needs infra): OTLP export to Grafana Tempo/Jaeger — blocked until
+ an OTLP collector exists in devops stack; leave exporter disabled-by-default via configuration flag enable_distributed_tracing (default false).
