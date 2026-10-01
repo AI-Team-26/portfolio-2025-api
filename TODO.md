@@ -15,3 +15,6 @@
 
 - Feature 8 [refactor/08_db_pool_tuning] Replace PgPool::connect defaults in main.rs with explicit PgPoolOptions: add db_max_connections (start 20), db_min_connections (start 2-5) and acquire_timeout (e.g.
  5s) to Configuration; document rationale (backpressure vs Postgres process-per-connection cost) and tune based on observed pool saturation under real load
+
+- Feature 9 [fix/09_session_client_metadata] Populate real client metadata at login (auth_endpoint.rs currently stores empty strings): read IP from X-Forwarded-For first hop (trusted-proxy chain:
+ Cloudflare → nginx; consider Cf-Connecting-Ip as primary since Cloudflare sets it authoritatively) and User-Agent from headers into LoginRequest; validate non-empty before persisting to Sessions
