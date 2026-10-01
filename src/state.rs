@@ -1,10 +1,7 @@
 use crate::services::{
-    auth_service::AuthService,
-    currency_rate_service::CurrencyRateService,
-    currency_service::CurrencyService,
-    custodian_service::CustodianService,
-    holding_service::HoldingService,
-    user_service::UserService,
+    auth_service::AuthService, currency_rate_service::CurrencyRateService,
+    currency_service::CurrencyService, custodian_service::CustodianService,
+    holding_service::HoldingService, user_service::UserService,
 };
 
 #[derive(Clone)]

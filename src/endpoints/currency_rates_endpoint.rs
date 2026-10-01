@@ -2,9 +2,9 @@ use axum::extract::Query;
 use axum::{extract::State, response::IntoResponse};
 
 use super::response_utils::response_not_found;
-use crate::state::AppState;
 use crate::endpoints::helper::parse_date;
 use crate::endpoints::models::currency_rate_models as models;
+use crate::state::AppState;
 
 use crate::endpoints::request_validator::RuleString;
 use crate::endpoints::response_utils::{response_bad_request, response_ok_map};
