@@ -35,7 +35,7 @@ impl CurrencyRateRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to create CurrencyRate. {e}")))?;
 
         Ok(())
     }
@@ -57,7 +57,7 @@ impl CurrencyRateRepository {
             .bind(date)
             .fetch_all(&self.db_pool)
             .await
-            .map_err(DatabaseError::from)?;
+            .map_err(|e| DatabaseError::generic(format!("Failed to search CurrencyRates. {e}")))?;
 
         Ok(rates)
     }
@@ -73,7 +73,9 @@ impl CurrencyRateRepository {
         .bind(date)
         .fetch_all(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| {
+            DatabaseError::generic(format!("Failed to list CurrencyRates at date. {e}"))
+        })?;
 
         Ok(rates)
     }

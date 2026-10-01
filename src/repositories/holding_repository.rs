@@ -35,7 +35,7 @@ impl HoldingRepository {
         )
         .fetch_one(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to create Holding. {e}")))?;
 
         Ok(row.id)
     }
@@ -63,7 +63,7 @@ impl HoldingRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to update Holding. {e}")))?;
 
         self.check_result(result)
     }
@@ -76,7 +76,7 @@ impl HoldingRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to delete Holding. {e}")))?;
 
         self.check_result(result)
     }
@@ -93,7 +93,7 @@ impl HoldingRepository {
                     user_id, id)
                 .fetch_one(&self.db_pool)
                 .await
-                .map_err(DatabaseError::from)?;
+                .map_err(|e| DatabaseError::generic(format!("Failed to get Holding. {e}")))?;
 
         let record = HoldingRecord {
             id: row.id,
@@ -122,10 +122,9 @@ impl HoldingRepository {
             user_id
         );
 
-        let rows = query
-            .fetch_all(&self.db_pool)
-            .await
-            .map_err(DatabaseError::from)?;
+        let rows = query.fetch_all(&self.db_pool).await.map_err(|e| {
+            DatabaseError::generic(format!("Failed to get Holdings last balance. {e}"))
+        })?;
 
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {
@@ -151,7 +150,7 @@ impl HoldingRepository {
                     user_id)
                 .fetch_all(&self.db_pool)
                 .await
-                .map_err(DatabaseError::from)?;
+                .map_err(|e| DatabaseError::generic(format!("Failed to list Holdings. {e}")))?;
 
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {

@@ -20,7 +20,7 @@ impl CurrencyOfUserRepository {
         )
         .fetch_all(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to get Currencies of user. {e}")))?;
 
         Ok(items)
     }
@@ -36,7 +36,7 @@ impl CurrencyOfUserRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to create CurrencyOfUser. {e}")))?;
 
         Ok(())
     }
@@ -51,7 +51,7 @@ impl CurrencyOfUserRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to delete CurrencyOfUser. {e}")))?;
 
         // no need to check rows affected because if 0 it was not found because already deleted
         Ok(())

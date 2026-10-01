@@ -30,7 +30,7 @@ impl CurrencyRepository {
         )
         .fetch_one(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to create Currency. {e}")))?;
 
         Ok(row.id)
     }
@@ -53,7 +53,7 @@ impl CurrencyRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to update Currency. {e}")))?;
 
         if result.rows_affected() == 0 {
             return Err(DatabaseError::RecordNotFound);
@@ -70,7 +70,7 @@ impl CurrencyRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to delete Currency. {e}")))?;
 
         // no need to check rows affected because if 0 it was not found because already deleted
         Ok(())
@@ -84,7 +84,7 @@ impl CurrencyRepository {
             "#)
             .fetch_all(&self.db_pool)
             .await
-            .map_err(DatabaseError::from)?;
+            .map_err(|e| DatabaseError::generic(format!("Failed to list Currencies. {e}")))?;
 
         Ok(currencies)
     }

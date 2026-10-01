@@ -55,7 +55,7 @@ impl CustodianRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to update Custodian. {e}")))?;
 
         self.check_result(result)
     }
@@ -68,7 +68,7 @@ impl CustodianRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to delete Custodian. {e}")))?;
 
         self.check_result(result)
     }
@@ -83,7 +83,7 @@ impl CustodianRepository {
                 user_id, id)
                     .fetch_one(&self.db_pool)
                     .await
-                    .map_err(DatabaseError::from)?;
+                    .map_err(|e| DatabaseError::generic(format!("Failed to get Custodian. {e}")))?;
         Ok(item)
     }
 
@@ -96,7 +96,7 @@ impl CustodianRepository {
         )
         .fetch_all(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to list Custodians. {e}")))?;
 
         Ok(custodians)
     }

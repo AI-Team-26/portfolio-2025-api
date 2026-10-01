@@ -28,7 +28,7 @@ impl UserRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to create User. {e}")))?;
 
         Ok(())
     }
@@ -42,7 +42,7 @@ impl UserRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)
+        .map_err(|e| DatabaseError::generic(format!("Failed to get User by id. {e}")))
     }
 
     pub async fn find_by_username(
@@ -57,7 +57,7 @@ impl UserRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)
+        .map_err(|e| DatabaseError::generic(format!("Failed to find User by username. {e}")))
     }
 
     pub async fn update_currency(
@@ -76,7 +76,7 @@ impl UserRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to update User currency. {e}")))?;
 
         Ok(())
     }

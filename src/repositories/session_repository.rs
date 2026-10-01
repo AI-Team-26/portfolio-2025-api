@@ -33,7 +33,7 @@ impl SessionRepository {
         )
         .fetch_one(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to create Session. {e}")))?;
 
         Ok(row.id)
     }
@@ -68,7 +68,7 @@ impl SessionRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)
+        .map_err(|e| DatabaseError::generic(format!("Failed to update Session for access. {e}")))
     }
 
     pub async fn update_for_refresh(
@@ -98,7 +98,7 @@ impl SessionRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)
+        .map_err(|e| DatabaseError::generic(format!("Failed to update Session for refresh. {e}")))
     }
 
     pub async fn exists_by_refresh_token(
@@ -112,7 +112,7 @@ impl SessionRepository {
         )
         .fetch_one(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to check if Session exists. {e}")))?;
 
         if !exists.unwrap_or(false) {
             return Ok(false);
@@ -147,6 +147,6 @@ impl SessionRepository {
         })
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(DatabaseError::from)
+        .map_err(|e| DatabaseError::generic(format!("Failed to find Session by refresh token. {e}")))
     }
 }
