@@ -77,7 +77,7 @@ impl CurrencyRepository {
     }
 
     pub async fn list(&self) -> Result<Vec<Currency>, String> {
-        let currencies = sqlx::query_as!(Currency, 
+        let currencies = sqlx::query_as!(Currency,
             r#"
             SELECT id, symbol, name, kind as "kind!: CurrencyKind", is_active, precision, is_major, coingecko_id
             FROM Currency
