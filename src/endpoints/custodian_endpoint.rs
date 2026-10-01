@@ -15,7 +15,7 @@ pub async fn create(
     ValidJson(request): ValidJson<models::create::Request>,
 ) -> impl IntoResponse {
     if let Err(response) = validate_request(&request.0) {
-        return response;
+        return *response;
     }
 
     match request.into_entity(session.user_id) {
@@ -51,7 +51,7 @@ pub async fn update(
         response_unhautorized("User ID is empty")
     } else {
         if let Err(response) = validate_request(&request.0) {
-            return response;
+            return *response;
         }
 
         match request.into_entity(id, session.user_id) {
