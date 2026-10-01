@@ -1,11 +1,10 @@
-use argon2::{Argon2, PasswordHasher, PasswordVerifier, 
-    password_hash::{SaltString, PasswordHash, rand_core::OsRng}};
+use argon2::{Argon2, PasswordHasher, PasswordVerifier};
+use password_hash::phc::{PasswordHash};
 
 pub fn hash_password(password: &str) -> String {
-    let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
     
-    argon2.hash_password(password.as_bytes(), &salt)
+    argon2.hash_password(password.as_bytes())
         .expect("Error while hashing password")
         .to_string()
 }
