@@ -1,4 +1,4 @@
-use crate::{dependency_injection::AppState, endpoints};
+use crate::{endpoints, state::AppState};
 use axum::{
     middleware,
     routing::{delete, get, patch, post, put},

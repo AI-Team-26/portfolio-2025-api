@@ -2,7 +2,7 @@ use async_trait::async_trait;
 
 use crate::{
     configuration::Configuration, jobs::job_manager::RecurringJob,
-    utils::dependency_injection::AppState,
+    state::AppState,
 };
 
 #[derive(Clone)]
