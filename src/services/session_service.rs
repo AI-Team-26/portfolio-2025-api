@@ -7,11 +7,19 @@ use crate::{
     utils::token::generate_token,
 };
 
+use thiserror::Error;
+
 #[derive(Clone)]
 pub struct SessionService {
     repository: SessionRepository,
     #[allow(dead_code)]
     user_service: UserService,
+}
+
+#[derive(Error, Debug)]
+pub enum CreateError {
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] crate::repositories::errors::DatabaseError),
 }
 
 impl SessionService {
@@ -27,7 +35,7 @@ impl SessionService {
         user: User,
         ip_address: String,
         user_agent: String,
-    ) -> Result<Session, String> {
+    ) -> Result<Session, CreateError> {
         let now = datetime::now();
         let access_expires_at = now + constants::auth::ACCESS_TOKEN_LIFETIME;
         let refresh_expires_at = now + constants::auth::REFRESH_TOKEN_LIFETIME;
@@ -48,62 +56,13 @@ impl SessionService {
 
         let record = SessionRecord::from(session.clone());
 
-        match self.repository.create(record).await {
-            Ok(new_id) => {
-                // TODO: log
+        let new_id = self.repository.create(record).await?;
 
-                // update id
-                let final_session = Session {
-                    id: new_id,
-                    ..session
-                };
-                Ok(final_session)
-
-                //session.update_id(new_id);
-                //Ok(session)
-            }
-            Err(e) => {
-                // TODO: log
-                Err(format!("Failed to create user Sessoon. {}", e))
-            }
-        }
+        // update id
+        let final_session = Session {
+            id: new_id,
+            ..session
+        };
+        Ok(final_session)
     }
-
-    /*
-    pub async fn find_by_access_token(&self, access_token: &str) -> Result<Option<Session>, String> {
-
-        // TODO: optimize with a single query
-
-        let Some(record) = self.repository.find_by_access_token(access_token).await? else {
-            return Ok(None); //(format!("Session not found with access token: '{}'", access_token));
-        };
-
-        let Some(user ) = self.user_service.get(&record.user_id).await? else {
-            return Err(format!("User not found with id: '{}'", &record.user_id));
-        };
-
-        let session: Session = (record, user).into();
-        Ok(Some(session))
-    }
-
-    pub async fn find_by_refresh_token(&self, refresh_token: &str) -> Result<Option<Session>, String> {
-
-        // TODO: optimize with a single query
-
-        let Some(record) = self.repository.find_by_refresh_token(refresh_token).await? else {
-            return Ok(None);
-        };
-
-        let Some(user ) = self.user_service.get(&record.user_id).await? else {
-            return Err(format!("User not found with id: '{}'", &record.user_id));
-        };
-
-        let session: Session = (record, user).into();
-        Ok(Some(session))
-    }
-    */
-
-    //pub async fn update(&self, item: Session) -> Result<(), String> {
-    //    self.repository.update(item).await
-    //}
 }

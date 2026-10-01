@@ -22,7 +22,7 @@ pub async fn single_for_pair(
         .await
     {
         Ok(rates) => response_ok_map(rates, models::CurrencyRate::from),
-        Err(e) => response_not_found(&format!("Currency rate not foun. {e}")),
+        Err(e) => response_not_found(&format!("Currency rate not found. {e}")),
     }
 }
 
@@ -30,7 +30,7 @@ pub async fn list_at_date(
     State(state): State<AppState>,
     Query(query): Query<models::AtDateQuery>,
 ) -> impl IntoResponse {
-    crate::info!("curerncy-rates list_at_date");
+    crate::info!("currency-rates list_at_date");
     crate::warn!("Received date query parameter: {:?}", query);
 
     if let Err(response) = validate_request(&query) {
@@ -45,6 +45,6 @@ pub async fn list_at_date(
 
     match state.currency_rate_service.list_at_date(parsed_date).await {
         Ok(rates) => response_ok_map(rates, models::CurrencyRate::from),
-        Err(e) => response_not_found(&format!("Currency rate not foun. {e}")),
+        Err(e) => response_not_found(&format!("Currency rate not found. {e}")),
     }
 }

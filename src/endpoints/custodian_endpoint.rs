@@ -1,7 +1,7 @@
 use crate::endpoints::models::custodian_models as models;
 use crate::endpoints::request_json_validator::ValidJson;
 use crate::endpoints::response_utils::*;
-use crate::repositories::errors::ErrorKind;
+use crate::repositories::errors::DatabaseError;
 use crate::services::custodian_service::CreateError;
 use crate::state::AppState;
 use crate::utils::auth_middleware::Session;
@@ -23,7 +23,7 @@ pub async fn create(
             Ok(new_id) => response_created_new_id(new_id),
             Err(e) => match e {
                 CreateError::NameAlreadyExists => response_duplicated_value("Name"),
-                CreateError::Unexpected(message) => response_error(&message),
+                CreateError::DatabaseError(e) => response_error(&e.to_string()),
             },
         },
         Err(e) => response_bad_request(&e),
@@ -37,7 +37,7 @@ pub async fn single(
 ) -> impl IntoResponse {
     match state.custodian_service.single(id, &session.user_id).await {
         Ok(item) => response_ok(item),
-        Err(e) => response_error(&e),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -57,7 +57,7 @@ pub async fn update(
         match request.into_entity(id, session.user_id) {
             Ok(entity) => match state.custodian_service.update(entity).await {
                 Ok(()) => response_ok("Custodian updated successfully"),
-                Err(e) => response_error(&e.message),
+                Err(e) => response_error(&e.to_string()),
             },
             Err(e) => response_bad_request(&e),
         }
@@ -71,8 +71,8 @@ pub async fn delete(
 ) -> impl IntoResponse {
     match state.custodian_service.delete(id, &session.user_id).await {
         Ok(()) => response_ok(()),
-        Err(e) if e.kind == ErrorKind::RecordNotFound => response_not_found(&e.message),
-        Err(e) => response_error(&e.message),
+        Err(e) if matches!(e, DatabaseError::RecordNotFound | DatabaseError::RecordNotFoundWithId(_)) => response_not_found(&e.to_string()),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -80,6 +80,6 @@ pub async fn list(State(state): State<AppState>) -> impl IntoResponse {
     match state.custodian_service.list().await {
         // no need to convert to a model
         Ok(entities) => response_ok(entities),
-        Err(e) => response_error(e.as_str()),
+        Err(e) => response_error(&e.to_string()),
     }
 }

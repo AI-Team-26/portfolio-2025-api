@@ -1,4 +1,5 @@
 use crate::entities::currency::CurrencyKind;
+use crate::repositories::errors::DatabaseError;
 use dashmap::DashMap;
 use std::sync::Arc; // Atomic Reference Counter
                     //e std::sync::{LazyLock, RwLock}; // Rust doesn't allow "static mut" :-(
@@ -53,7 +54,7 @@ impl CurrencyService {
     }
 
     // Initialize cache at startup (called only once)
-    pub async fn init_cache(&self) -> Result<(), String> {
+    pub async fn init_cache(&self) -> Result<(), DatabaseError> {
         let items: Vec<Currency> = self.repository.list().await?;
 
         self.currencies.clear();
@@ -121,7 +122,7 @@ impl CurrencyService {
     }
 
     // Database operations with cache updates
-    pub async fn create(&self, mut item: Currency) -> Result<i32, String> {
+    pub async fn create(&self, mut item: Currency) -> Result<i32, DatabaseError> {
         let id = self.repository.create(item.clone()).await?;
 
         // update the item.id
@@ -133,7 +134,7 @@ impl CurrencyService {
         Ok(id)
     }
 
-    pub async fn update(&self, item: Currency) -> Result<(), String> {
+    pub async fn update(&self, item: Currency) -> Result<(), DatabaseError> {
         self.repository.update(&item).await?;
 
         // Update the cache
@@ -142,7 +143,7 @@ impl CurrencyService {
         Ok(())
     }
 
-    pub async fn delete(&self, id: i32) -> Result<(), String> {
+    pub async fn delete(&self, id: i32) -> Result<(), DatabaseError> {
         self.repository.delete(id).await?;
 
         // Update the cache
@@ -151,7 +152,7 @@ impl CurrencyService {
         Ok(())
     }
 
-    pub async fn list_for_user(&self, user_id: &str) -> Result<Vec<CurrencyOfUser>, String> {
+    pub async fn list_for_user(&self, user_id: &str) -> Result<Vec<CurrencyOfUser>, DatabaseError> {
         let used_by_user: Vec<i32> = self
             .repository_of_user
             .list(user_id)
@@ -182,7 +183,7 @@ impl CurrencyService {
         user_id: String,
         currency_id: i32,
         enable: bool,
-    ) -> Result<(), String> {
+    ) -> Result<(), DatabaseError> {
         match enable {
             true => self.repository_of_user.create(user_id, currency_id).await,
             false => self.repository_of_user.delete(user_id, currency_id).await,

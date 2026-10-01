@@ -4,15 +4,20 @@ use crate::{
     services::currency_service::CurrencyService,
 };
 
+use thiserror::Error;
+
 #[derive(Clone)]
 pub struct UserService {
     user_repository: UserRepository,
     currency_service: CurrencyService,
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum CreateError {
-    DatabaseError(String),
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] DatabaseError),
+
+    #[error("Username already in use")]
     UsernameAlreadyInUse,
 }
 
@@ -31,22 +36,12 @@ impl UserService {
             Err(e) => return Err(CreateError::DatabaseError(e)),
         }
 
-        /* if self.find_by_username(user.username.clone()).await
-        .map_err(|e| CreateError::DatabaseError(e.to_string()))?
-        .is_some()  {
-            return Err(CreateError::UsernameAlreadyInUse);
-        }
-        */
-
-        self.user_repository
-            .create(user)
-            .await
-            .map_err(|e| CreateError::DatabaseError(e.to_string()))?;
+        self.user_repository.create(user).await?;
 
         Ok(())
     }
 
-    pub async fn get(&self, id: &str) -> Result<Option<User>, String> {
+    pub async fn get(&self, id: &str) -> Result<Option<User>, DatabaseError> {
         let user_result = self.user_repository.get(id).await?;
         Ok(user_result.map(|record| User {
             id: record.id,
@@ -58,7 +53,7 @@ impl UserService {
         }))
     }
 
-    pub async fn find_by_username(&self, username: String) -> Result<Option<User>, String> {
+    pub async fn find_by_username(&self, username: String) -> Result<Option<User>, DatabaseError> {
         let user_result = self.user_repository.find_by_username(username).await?;
         Ok(user_result.map(|record| User {
             id: record.id,
@@ -78,6 +73,5 @@ impl UserService {
         self.user_repository
             .update_currency(user_id, currency_id)
             .await
-            .map_err(DatabaseError::generic)
     }
 }

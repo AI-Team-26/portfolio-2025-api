@@ -1,59 +1,61 @@
-#[derive(PartialEq)]
-#[allow(dead_code)]
-pub enum ErrorKind {
-    DuplicatedField,
+use thiserror::Error;
+
+#[derive(Error, Debug, PartialEq)]
+pub enum DatabaseError {
+    #[error("Duplicate field: {0}")]
+    DuplicatedField(String),
+
+    #[error("Record not found")]
     RecordNotFound,
-    Generic,
+
+    #[error("Record not found with ID: {0}")]
+    RecordNotFoundWithId(i32),
+
+    #[error("Database error: {0}")]
+    Generic(String),
 }
 
-#[allow(dead_code)]
-pub struct DatabaseError {
-    pub message: String,
-    pub kind: ErrorKind,
-}
-
-#[allow(dead_code)]
 impl DatabaseError {
     pub fn duplicated_field(message: String) -> Self {
-        DatabaseError {
-            message,
-            kind: ErrorKind::DuplicatedField,
-        }
+        DatabaseError::DuplicatedField(message)
     }
 
     pub fn record_not_found() -> Self {
-        DatabaseError {
-            message: "Record not found.".to_string(),
-            kind: ErrorKind::RecordNotFound,
-        }
+        DatabaseError::RecordNotFound
     }
 
     pub fn record_not_found_with_id(id: i32) -> Self {
-        DatabaseError {
-            message: format!("Record not found. ID: {}.", id),
-            kind: ErrorKind::RecordNotFound,
-        }
+        DatabaseError::RecordNotFoundWithId(id)
     }
 
     pub fn generic(message: String) -> Self {
-        DatabaseError {
-            message,
-            kind: ErrorKind::Generic,
+        DatabaseError::Generic(message)
+    }
+}
+
+impl From<sqlx::Error> for DatabaseError {
+    fn from(err: sqlx::Error) -> Self {
+        match err {
+            sqlx::Error::Database(e) if e.is_unique_violation() => {
+                DatabaseError::DuplicatedField(e.to_string())
+            }
+            sqlx::Error::Database(e) => DatabaseError::Generic(match e.code() {
+                Some(code) => format!("Code: {}. {}", code, e),
+                None => e.to_string(),
+            }),
+            _ => DatabaseError::Generic(err.to_string()),
         }
     }
 }
 
-/* example with thiserror crate to define the behaviour of Display (for having .to_string()) */
-/*
-#[derive(thiserror::Error, Debug)]
-pub enum CustodianError {
-    #[error("Duplicate custodian name: {0}")]
-    DuplicateName(String),
-
-    #[error("Database error: {0}")]
-    DatabaseError(String),
-
-    #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error),
+impl From<String> for DatabaseError {
+    fn from(err: String) -> Self {
+        DatabaseError::Generic(err)
+    }
 }
-*/
+
+impl From<&str> for DatabaseError {
+    fn from(err: &str) -> Self {
+        DatabaseError::Generic(err.to_string())
+    }
+}

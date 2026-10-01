@@ -41,7 +41,7 @@ pub async fn signup(
         }
         Err(CreateError::DatabaseError(e)) => {
             // TODO: log error
-            response_error(&e)
+            response_error(&e.to_string())
         }
     }
 }
@@ -73,7 +73,7 @@ pub async fn login(
     match state.auth_service.login(service_request).await {
         Ok(session) => response_ok(login::Response::from(session)),
         Err(LoginError::FailedLogin) => response_unhautorized("Wrong username or password"),
-        Err(LoginError::DatabaseError(e)) => response_error(&e),
+        Err(LoginError::DatabaseError(e)) => response_error(&e.to_string()),
     }
 }
 
@@ -95,6 +95,6 @@ pub async fn refresh_token(
         Err(AuthError::InvalidOrExpiredToken(data)) => response_invalid_token(
             format!("Refresh token is invalid or expired. {}", data).as_str(),
         ),
-        Err(AuthError::DatabaseError(e)) => response_error(&e),
+        Err(AuthError::DatabaseError(e)) => response_error(&e.to_string()),
     }
 }

@@ -8,6 +8,7 @@ use crate::endpoints::request_json_validator::ValidJson;
 use crate::state::AppState;
 
 use crate::endpoints::response_utils::response_ok_no_data;
+use crate::repositories::errors::DatabaseError;
 use crate::utils::auth_middleware::Session;
 
 pub async fn create(
@@ -17,7 +18,7 @@ pub async fn create(
     match data.into_entity() {
         Ok(entity) => match state.currency_service.create(entity).await {
             Ok(new_id) => response_created_new_id(new_id),
-            Err(e) => response_error(&e),
+            Err(e) => response_error(&e.to_string()),
         },
         Err(e) => response_bad_request(&e),
     }
@@ -30,7 +31,7 @@ pub async fn update(
     match data.into_entity() {
         Ok(entity) => match state.currency_service.update(entity).await {
             Ok(()) => response_ok("Currency updated successfully"),
-            Err(e) => response_error(&e),
+            Err(e) => response_error(&e.to_string()),
         },
         Err(e) => response_bad_request(&e),
     }
@@ -39,7 +40,8 @@ pub async fn update(
 pub async fn delete(State(state): State<AppState>, Path(id): Path<i32>) -> impl IntoResponse {
     match state.currency_service.delete(id).await {
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e),
+        Err(e) if matches!(e, DatabaseError::RecordNotFound | DatabaseError::RecordNotFoundWithId(_)) => response_not_found(&e.to_string()),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -68,7 +70,7 @@ pub async fn list_of_user(
 ) -> impl IntoResponse {
     match state.currency_service.list_for_user(&session.user_id).await {
         Ok(data) => response_ok(data),
-        Err(err) => response_error(&err),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -84,7 +86,7 @@ pub async fn enable(
     {
         // true
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -100,6 +102,6 @@ pub async fn disable(
     {
         // false
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e),
+        Err(e) => response_error(&e.to_string()),
     }
 }

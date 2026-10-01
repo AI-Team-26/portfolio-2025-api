@@ -1,5 +1,5 @@
 use crate::{
-    repositories::{helpers::from_rust_decimal, schemas::currency_rate_record::CurrencyRateRecord},
+    repositories::{errors::DatabaseError, helpers::from_rust_decimal, schemas::currency_rate_record::CurrencyRateRecord},
     utils::datetime::Date,
 };
 use sqlx::PgPool;
@@ -14,7 +14,7 @@ impl CurrencyRateRepository {
         Self { db_pool }
     }
 
-    pub async fn create(&self, record: &CurrencyRateRecord) -> Result<(), String> {
+    pub async fn create(&self, record: &CurrencyRateRecord) -> Result<(), DatabaseError> {
         sqlx::query!(
             // Postgres UPSERT
             r#"
@@ -32,7 +32,7 @@ impl CurrencyRateRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(DatabaseError::from)?;
 
         Ok(())
     }
@@ -42,7 +42,7 @@ impl CurrencyRateRepository {
         base_currency_id: i32,
         quote_currency_id: i32,
         date: Option<Date>,
-    ) -> Result<Vec<CurrencyRateRecord>, String> {
+    ) -> Result<Vec<CurrencyRateRecord>, DatabaseError> {
         let rates = sqlx::query_as::<_, CurrencyRateRecord>(
             r#"
             SELECT base_currency_id, quote_currency_id, date, source, rate, created_at
@@ -54,12 +54,12 @@ impl CurrencyRateRepository {
             .bind(date)
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|e:sqlx::Error| e.to_string())?;
+            .map_err(DatabaseError::from)?;
 
         Ok(rates)
     }
 
-    pub async fn list_at_date(&self, date: Date) -> Result<Vec<CurrencyRateRecord>, String> {
+    pub async fn list_at_date(&self, date: Date) -> Result<Vec<CurrencyRateRecord>, DatabaseError> {
         let rates = sqlx::query_as::<_, CurrencyRateRecord>(
             r#"
             SELECT base_currency_id, quote_currency_id, date, source, rate::numeric, created_at
@@ -70,7 +70,7 @@ impl CurrencyRateRepository {
         .bind(date)
         .fetch_all(&self.db_pool)
         .await
-        .map_err(|e: sqlx::Error| e.to_string())?;
+        .map_err(DatabaseError::from)?;
 
         Ok(rates)
     }
