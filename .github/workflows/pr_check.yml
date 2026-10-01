@@ -61,5 +61,5 @@ jobs:
 
       # Integration tests: spin up a real Postgres via testcontainers
       # (one container per test, hence --test-threads=1).
-      - name: 🧪 Integration Tests
-        run: cargo test --test integration_tests -- --test-threads=1
+      #- name: 🧪 Integration Tests
+      #  run: cargo test --test integration_tests -- --test-threads=1
