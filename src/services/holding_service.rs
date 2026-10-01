@@ -51,7 +51,7 @@ impl HoldingService {
     }
 
     pub async fn delete(&self, user_id: &str, id: i32) -> Result<(), DatabaseError> {
-        self.repository.delete(id, &user_id).await
+        self.repository.delete(id, user_id).await
     }
 
     pub async fn single_for_user(&self, user_id: &str, id: i32) -> Result<HoldingRecord, String> {
@@ -80,7 +80,7 @@ impl HoldingService {
 
     async fn add_amount_in_main_currency(
         &self,
-        records: &Vec<HoldingRecord>,
+        records: &[HoldingRecord],
         main_currency: &Currency,
     ) -> Result<Vec<search::Response>, String> {
         let rates = self.currency_rate_service.get_rates_of_today().await?;
@@ -93,16 +93,13 @@ impl HoldingService {
         );
 
         Ok(records
-            .into_iter()
+            .iter()
             .map(|r| {
                 let amount = match r.currency_id.eq(&main_currency.id) {
                     true => Some(r.amount),
-                    false => match rates_map.get(&r.currency_id) {
-                        Some(rate) => {
-                            Some((r.amount * rate).round_dp(main_currency.precision as u32))
-                        }
-                        None => None,
-                    },
+                    false => rates_map
+                        .get(&r.currency_id)
+                        .map(|rate| (r.amount * rate).round_dp(main_currency.precision as u32)),
                 };
 
                 search::Response::from((r.clone(), amount))

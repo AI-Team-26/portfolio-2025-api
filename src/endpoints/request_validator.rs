@@ -8,16 +8,17 @@ pub enum RuleString {
     MinLength(usize),
     MaxLength(usize),
     FixLength(usize),
-    UUID,
+    Uuid,
     IsValidCustodianKind(),
 }
 
-#[allow(dead_code)]
+/*
 pub enum RuleStringOption {
     MinLength(usize),
     MaxLength(usize),
     FixLength(usize),
 }
+*/
 
 pub enum RuleNumber {
     NotZero,
@@ -43,7 +44,7 @@ impl RuleString {
             RuleString::FixLength(len) if value.len() > *len => {
                 Some(format!("{}: must be {} characters", field, len))
             }
-            RuleString::UUID => None, // TODO: not implemented
+            RuleString::Uuid => None, // TODO: not implemented
             RuleString::IsValidCustodianKind() if !KINDS.contains(&value) => Some(format!(
                 "{}: is not a valid kind. Valid values: {}.",
                 field,
@@ -54,6 +55,7 @@ impl RuleString {
     }
 }
 
+/*
 impl RuleStringOption {
     #[allow(dead_code)]
     pub fn validate(&self, field: &str, value: &Option<String>) -> Option<String> {
@@ -73,6 +75,7 @@ impl RuleStringOption {
         }
     }
 }
+*/
 
 impl RuleNumber {
     pub fn validate<T: PartialEq + Default>(&self, field: &str, value: T) -> Option<String> {
@@ -118,7 +121,7 @@ macro_rules! validate {
         )*
         // returns the HTTP response 4xx
         if !errors.is_empty() {
-            return crate::endpoints::response_utils::response_validation_errors(errors);
+            return $crate::endpoints::response_utils::response_validation_errors(errors);
         }
     }};
 }

@@ -78,6 +78,6 @@ impl UserService {
         self.user_repository
             .update_currency(user_id, currency_id)
             .await
-            .map_err(|e| DatabaseError::generic(e))
+            .map_err(DatabaseError::generic)
     }
 }

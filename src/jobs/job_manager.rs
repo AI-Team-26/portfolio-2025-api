@@ -9,7 +9,7 @@ pub async fn schedule_jobs(config: &Configuration, app_state: AppState) {
     let scheduler = JobScheduler::new().await.unwrap();
 
     // Update Exchange Rate
-    let update_exchange_rates_job = UpdateCurrencyRatesJob::new(&config, app_state.clone());
+    let update_exchange_rates_job = UpdateCurrencyRatesJob::new(config, app_state.clone());
 
     scheduler
         .add(

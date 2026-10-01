@@ -41,7 +41,7 @@ impl SessionRepository {
         update: UpdateForAccess,
     ) -> Result<Option<SessionWithUser>, String> {
         warn!("update_for_access");
-        Ok(sqlx::query_as!(
+        sqlx::query_as!(
             SessionWithUser,
             r#"
             UPDATE Sessions
@@ -66,7 +66,7 @@ impl SessionRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())
     }
 
     pub async fn update_for_refresh(
@@ -74,7 +74,7 @@ impl SessionRepository {
         update: UpdateForRefresh,
     ) -> Result<Option<SessionRecord>, String> {
         warn!("update_for_refresh");
-        Ok(sqlx::query_as!(
+        sqlx::query_as!(
             SessionRecord,
             r#"
             Update Sessions SET 
@@ -96,7 +96,7 @@ impl SessionRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())
     }
     /*
     pub async fn find_by_access_token(&self, access_token: &str) -> Result<Option<SessionRecord>, String> {

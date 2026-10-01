@@ -16,11 +16,7 @@ pub trait BaseRepository {
             Err(SqlxError::Database(e)) => match e.is_unique_violation() {
                 true => Err(DatabaseError::duplicated_field(e.to_string())),
                 _ => match e.code() {
-                    Some(code) => Err(DatabaseError::generic(format!(
-                        "Code: {}. {}",
-                        code,
-                        e.to_string()
-                    ))),
+                    Some(code) => Err(DatabaseError::generic(format!("Code: {}. {}", code, e))),
                     None => Err(DatabaseError::generic(e.to_string())),
                 },
             },

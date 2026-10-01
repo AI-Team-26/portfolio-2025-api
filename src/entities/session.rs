@@ -22,7 +22,7 @@ impl From<(SessionRecord, User)> for Session {
     fn from((record, user): (SessionRecord, User)) -> Self {
         Session {
             id: record.id,
-            user: user,
+            user,
             access_token: record.access_token,
             access_token_expires_at: record.access_token_expires_at,
             refresh_token: record.refresh_token,

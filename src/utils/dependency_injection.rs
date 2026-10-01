@@ -38,7 +38,7 @@ pub async fn inject_services(config: &Configuration, db_pool: PgPool) -> AppStat
     let holding_repository = HoldingRepository::new(db_pool.clone());
     let currency_rate_repository = CurrencyRateRepository::new(db_pool.clone());
 
-    let coingecko_api = CoingeckoApi::new(&config);
+    let coingecko_api = CoingeckoApi::new(config);
 
     let currency_service = CurrencyService::new(
         currency_repository.clone(),

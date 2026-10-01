@@ -57,9 +57,9 @@ impl AuthService {
         let hashed_password = hash_password(&password);
 
         let user: User = User {
-            id: id,
-            username: username,
-            hashed_password: hashed_password,
+            id,
+            username,
+            hashed_password,
             creation_date: now(),
             currency,
             role: String::from("User"), // default
@@ -73,7 +73,7 @@ impl AuthService {
             .user_service
             .find_by_username(request.username)
             .await
-            .map_err(|e| LoginError::DatabaseError(e))?
+            .map_err(LoginError::DatabaseError)?
         else {
             return Err(LoginError::FailedLogin);
         };
@@ -84,7 +84,7 @@ impl AuthService {
                 self.session_service
                     .create(user, request.ip_address, request.user_agent)
                     .await
-                    .map_err(|e| LoginError::DatabaseError(e))
+                    .map_err(LoginError::DatabaseError)
             }
             false => Err(LoginError::FailedLogin),
         }
@@ -119,7 +119,7 @@ impl AuthService {
                 last_access_at: now,
             })
             .await
-            .map_err(|e| AuthError::DatabaseError(e))?
+            .map_err(AuthError::DatabaseError)?
         {
             Some(record) => Ok(record),
             None => Err(AuthError::InvalidOrExpiredToken(data_for_expired_token)), // session not found
@@ -133,7 +133,7 @@ impl AuthService {
             .session_repository
             .exists_by_refresh_token(&refresh_token)
             .await
-            .map_err(|e| AuthError::DatabaseError(e))?;
+            .map_err(AuthError::DatabaseError)?;
 
         if !exists {
             return Err(AuthError::InvalidOrExpiredToken(format!(
@@ -143,6 +143,7 @@ impl AuthService {
         }
 
         // debug
+        /*
         let session = match self
             .session_repository
             .find_by_refresh_token(&refresh_token)
@@ -151,10 +152,28 @@ impl AuthService {
             Err(_) => None,
             Ok(record) => record,
         };
+        */
+
+        //#[allow(clippy::approx_constant)] // not needed, just showing intent
+        let session = self
+            .session_repository
+            .find_by_refresh_token(&refresh_token)
+            .await
+            .ok()
+            .flatten();
+        /*
+        {
+            Ok(record) => record,
+            Err(_) => None,
+            //Ok(Some(record)) => record,
+            //Ok(None) => return AuthErr("invalid refresh token".to_string()),
+            //Err(e) => return AuthErr(format!("session lookup failed: {e}")),
+        };
+        */
 
         let (session_id, refresh_token_expires_at) = match session {
             Some(s) => (s.id.to_string(), s.refresh_token_expires_at.to_string()),
-            None => ("".to_string(), "".to_string()),
+            None => (String::new(), String::new()),
         };
 
         let data_for_expired_token = format!(
@@ -177,7 +196,7 @@ impl AuthService {
                 last_refresh_at: now,
             })
             .await
-            .map_err(|e| AuthError::DatabaseError(e))?
+            .map_err(AuthError::DatabaseError)?
         {
             Some(record) => Ok(record),
             None => Err(AuthError::InvalidOrExpiredToken(data_for_expired_token)), // session not found

@@ -29,7 +29,7 @@ async fn main() {
 
     println!(
         "Configuration loaded. Environment: {}. Log level: {}.",
-        config.environment, &config.log_level
+        config.environment, config.log_level
     );
 
     // setup Logging
@@ -71,7 +71,7 @@ async fn main() {
 
     // Bind on server (Azure or Docker container) requires 0.0.0.0
     // Locally it will bind 127.0.0.1 and localhost.
-    let address = format!("0.0.0.0:{}", &config.server_port);
+    let address = format!("0.0.0.0:{}", config.server_port);
 
     let listener = TcpListener::bind(&address)
         .await

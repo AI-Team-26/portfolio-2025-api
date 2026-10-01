@@ -63,10 +63,10 @@ pub async fn login(
     let user_agent: String = String::from("");
 
     let service_request = LoginRequest {
-        username: username,
-        password: password,
-        ip_address: ip_address,
-        user_agent: user_agent,
+        username,
+        password,
+        ip_address,
+        user_agent,
     };
 
     match state.auth_service.login(service_request).await {

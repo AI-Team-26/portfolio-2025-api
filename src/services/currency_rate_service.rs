@@ -78,10 +78,7 @@ impl CurrencyRateService {
             .collect();
 
         // We use a fixed list of coins as quote
-        let quote_ids = COINGECKO_QUOTE_IDS
-            .iter()
-            .map(|(_, cg_id)| *cg_id)
-            .collect::<Vec<_>>();
+        let quote_ids = COINGECKO_QUOTE_IDS.values().copied().collect::<Vec<_>>();
 
         let result = self.coingecko_api.get_rates(&base_ids, &quote_ids).await;
 
@@ -108,10 +105,9 @@ impl CurrencyRateService {
                                     base_currency_id: base_currency.id,
                                     quote_currency_id: quote_currency.id,
                                     date: today(),
-                                    rate: Decimal::from_f64(rate).expect(&format!(
-                                        "f64 to Decimal conversion failed for {}",
-                                        rate
-                                    )),
+                                    rate: Decimal::from_f64(rate).ok_or_else(|| {
+                                        format!("f64 to Decimal conversion failed for {rate}")
+                                    })?,
                                     source: constants::external_services::COINGECKO.to_owned(),
                                     created_at: now(),
                                 };

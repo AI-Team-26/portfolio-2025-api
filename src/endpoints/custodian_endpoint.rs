@@ -16,7 +16,7 @@ pub async fn create(
     Extension(session): Session,
     ValidJson(request): ValidJson<models::create::Request>,
 ) -> impl IntoResponse {
-    match request.to_entity(session.user_id) {
+    match request.into_entity(session.user_id) {
         Ok(entity) => {
             validate!(
                 "Name", &entity.name, RuleString::MinLength(3);
@@ -53,10 +53,10 @@ pub async fn update(
     Path(id): Path<i32>,
     ValidJson(request): ValidJson<models::update::Request>,
 ) -> impl IntoResponse {
-    if session.user_id == "" {
-        return response_unhautorized("User ID is empty");
+    if session.user_id.is_empty() {
+        response_unhautorized("User ID is empty")
     } else {
-        match request.to_entity(id, session.user_id) {
+        match request.into_entity(id, session.user_id) {
             /*validate!(
                 "Name", &entity.name, RuleString::MinLength(3);
                 "Custodian", &entity.custodian, RuleString::NotEmpty;

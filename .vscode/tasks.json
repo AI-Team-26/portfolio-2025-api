@@ -12,6 +12,15 @@
             "group": "build"
         },
         {
+            "label": "☑️ Cargo Lint",
+            "type": "shell",
+            "options": { 
+                "cwd": "${workspaceFolder}",
+            },
+            "command": "cargo fmt && cargo clippy --all-targets --all-features -- -D warnings",
+            "group": "build"
+        },
+        {
             "label": "🧪 Cargo Test",
             "type": "shell",
             "options": { 

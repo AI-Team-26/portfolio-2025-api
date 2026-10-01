@@ -29,7 +29,7 @@ mod upsert {
 
     // TODO: enum issue, it forces to return a Result
     impl Request {
-        pub fn to_entity(self, id: Option<i32>, user_id: String) -> Result<Custodian, String> {
+        pub fn into_entity(self, id: Option<i32>, user_id: String) -> Result<Custodian, String> {
             Ok(Custodian {
                 id: id.unwrap_or_default(),
                 user_id,
@@ -55,8 +55,8 @@ pub mod create {
     pub struct Request(pub upsert::Request);
 
     impl Request {
-        pub fn to_entity(self, user_id: String) -> Result<Custodian, String> {
-            self.0.to_entity(None, user_id) // None
+        pub fn into_entity(self, user_id: String) -> Result<Custodian, String> {
+            self.0.into_entity(None, user_id) // None
         }
     }
 }
@@ -69,8 +69,8 @@ pub mod update {
     pub struct Request(pub upsert::Request);
 
     impl Request {
-        pub fn to_entity(self, id: i32, user_id: String) -> Result<Custodian, String> {
-            self.0.to_entity(Some(id), user_id) // real id
+        pub fn into_entity(self, id: i32, user_id: String) -> Result<Custodian, String> {
+            self.0.into_entity(Some(id), user_id) // real id
         }
     }
 }

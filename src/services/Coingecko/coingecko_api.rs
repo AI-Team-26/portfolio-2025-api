@@ -13,7 +13,7 @@ pub struct CoingeckoApi {
     headers: HeaderMap,
 }
 
-const API_URL: &'static str = "https://api.coingecko.com/api/v3";
+const API_URL: &str = "https://api.coingecko.com/api/v3";
 
 pub type CoingeckoRates = HashMap<String, HashMap<String, f64>>;
 

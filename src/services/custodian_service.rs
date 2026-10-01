@@ -28,7 +28,7 @@ impl CustodianService {
     }
 
     pub async fn single(&self, id: i32, user_id: &str) -> Result<Custodian, String> {
-        self.repository.single(id, &user_id).await
+        self.repository.single(id, user_id).await
     }
 
     pub async fn update(&self, item: Custodian) -> Result<(), DatabaseError> {
@@ -36,7 +36,7 @@ impl CustodianService {
     }
 
     pub async fn delete(&self, id: i32, user_id: &str) -> Result<(), DatabaseError> {
-        self.repository.delete(id, &user_id).await
+        self.repository.delete(id, user_id).await
     }
 
     pub async fn list(&self) -> Result<Vec<Custodian>, String> {

@@ -14,7 +14,7 @@ pub async fn create(
     State(state): State<AppState>,
     ValidJson(data): ValidJson<models::CreateRequest>,
 ) -> impl IntoResponse {
-    match data.to_entity() {
+    match data.into_entity() {
         Ok(entity) => match state.currency_service.create(entity).await {
             Ok(new_id) => response_created_new_id(new_id),
             Err(e) => response_error(&e),
@@ -27,7 +27,7 @@ pub async fn update(
     State(state): State<AppState>,
     ValidJson(data): ValidJson<models::UpdateRequest>,
 ) -> impl IntoResponse {
-    match data.to_entity() {
+    match data.into_entity() {
         Ok(entity) => match state.currency_service.update(entity).await {
             Ok(()) => response_ok("Currency updated successfully"),
             Err(e) => response_error(&e),

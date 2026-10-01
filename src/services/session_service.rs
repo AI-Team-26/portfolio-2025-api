@@ -34,7 +34,7 @@ impl SessionService {
 
         let session = Session {
             id: 0, // to be updated
-            user: user,
+            user,
             access_token: generate_token(),
             access_token_expires_at: access_expires_at,
             refresh_token: generate_token(),

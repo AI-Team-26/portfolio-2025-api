@@ -53,10 +53,20 @@ impl HoldingAction {
         }
     }*/
 
+    /*
     pub fn to_string(&self) -> String {
         match self {
             HoldingAction::BalanceAt => "Balance At".to_string(),
             HoldingAction::Deposit => "Depositt".to_string(),
         }
+    } */
+}
+
+impl std::fmt::Display for HoldingAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            HoldingAction::BalanceAt => "Balance At",
+            HoldingAction::Deposit => "Deposit",
+        })
     }
 }
