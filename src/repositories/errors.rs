@@ -35,21 +35,6 @@ impl DatabaseError {
     }
 }
 
-impl From<sqlx::Error> for DatabaseError {
-    fn from(err: sqlx::Error) -> Self {
-        match err {
-            sqlx::Error::Database(e) if e.is_unique_violation() => {
-                DatabaseError::DuplicatedField(e.to_string())
-            }
-            sqlx::Error::Database(e) => DatabaseError::Generic(match e.code() {
-                Some(code) => format!("Code: {}. {}", code, e),
-                None => e.to_string(),
-            }),
-            _ => DatabaseError::Generic(err.to_string()),
-        }
-    }
-}
-
 impl From<String> for DatabaseError {
     fn from(err: String) -> Self {
         DatabaseError::Generic(err)
