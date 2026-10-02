@@ -3,7 +3,7 @@ use crate::repositories::schemas::session_record::{
     SessionRecord, SessionWithUser, UpdateForAccess, UpdateForRefresh,
 };
 use crate::warn;
-use sqlx::{PgPool, Row};
+use sqlx::PgPool;
 
 #[derive(Clone)]
 pub struct SessionRepository {
@@ -125,26 +125,13 @@ impl SessionRepository {
         &self,
         refresh_token: &str,
     ) -> Result<Option<SessionRecord>, DatabaseError> {
-        sqlx::query(
+        sqlx::query_as!(
+            SessionRecord,
             r#"
             SELECT id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, last_access_at, last_refresh_at, creation_ip_address, creation_user_agent
-            FROM Sessions WHERE refresh_token = $1           
-            "#
+            FROM Sessions WHERE refresh_token = $1
+            "#, refresh_token
         )
-        .bind(refresh_token)
-        .map(|row: sqlx::postgres::PgRow| SessionRecord {
-            id: row.get("id"),
-            user_id: row.get("user_id"),
-            access_token: row.get("access_token"),
-            access_token_expires_at: row.get("access_token_expires_at"),
-            refresh_token: row.get("refresh_token"),
-            refresh_token_expires_at: row.get("refresh_token_expires_at"),
-            created_at: row.get("created_at"),
-            last_access_at: row.get("last_access_at"),
-            last_refresh_at: row.get("last_refresh_at"),
-            creation_ip_address: row.get("creation_ip_address"),
-            creation_user_agent: row.get("creation_user_agent"),
-        })
         .fetch_optional(&self.db_pool)
         .await
         .map_err(|e| DatabaseError::generic(format!("Failed to find Session by refresh token. {e}")))
