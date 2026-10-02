@@ -34,6 +34,16 @@ pub enum LoginError {
     FailedLogin,
 }
 
+// Flatten the single-variant SessionService::CreateError so login errors
+// don't nest "Database error:" prefixes.
+impl From<SessionCreateError> for LoginError {
+    fn from(error: SessionCreateError) -> Self {
+        match error {
+            SessionCreateError::DatabaseError(e) => LoginError::DatabaseError(e),
+        }
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum AuthError {
     #[error("Database error: {0}")]
@@ -83,15 +93,10 @@ impl AuthService {
         };
 
         match verify_password(&request.password, &user.hashed_password) {
-            true => {
-                // create session
-                self.session_service
-                    .create(user, request.ip_address, request.user_agent)
-                    .await
-                    .map_err(|e| match e {
-                        SessionCreateError::DatabaseError(e) => LoginError::DatabaseError(e),
-                    })
-            }
+            true => Ok(self
+                .session_service
+                .create(user, request.ip_address, request.user_agent)
+                .await?),
             false => Err(LoginError::FailedLogin),
         }
     }
