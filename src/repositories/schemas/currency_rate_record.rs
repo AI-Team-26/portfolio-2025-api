@@ -1,5 +1,5 @@
 use crate::{
-    repositories::helpers::parse_decimal,
+    repositories::helpers::parse_decimal_for_sqlx,
     utils::datetime::{Date, UtcDateTime},
 };
 use rust_decimal::Decimal;
@@ -24,7 +24,7 @@ impl<'r> FromRow<'r, sqlx::postgres::PgRow> for CurrencyRateRecord {
             quote_currency_id: row.get("quote_currency_id"),
             date: row.get("date"),
             source: row.get("source"),
-            rate: parse_decimal(row.get("rate"))?,
+            rate: parse_decimal_for_sqlx(row.get("rate"))?,
             created_at: row.get("created_at"),
         })
     }

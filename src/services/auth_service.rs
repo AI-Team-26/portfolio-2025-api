@@ -9,12 +9,14 @@ use crate::{
     },
     services::{
         password_hashing::{hash_password, verify_password},
-        session_service::SessionService,
+        session_service::{CreateError as SessionCreateError, SessionService},
         user_service::{CreateError, UserService},
     },
     utils::datetime::{self, now},
     utils::token::generate_token,
 };
+
+use thiserror::Error;
 
 #[derive(Clone)]
 pub struct AuthService {
@@ -23,14 +25,31 @@ pub struct AuthService {
     session_repository: SessionRepository,
 }
 
+#[derive(Error, Debug)]
 pub enum LoginError {
-    DatabaseError(String),
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] crate::repositories::errors::DatabaseError),
+
+    #[error("Wrong username or password")]
     FailedLogin,
 }
 
-#[derive(Debug)]
+// Flatten the single-variant SessionService::CreateError so login errors
+// don't nest "Database error:" prefixes.
+impl From<SessionCreateError> for LoginError {
+    fn from(error: SessionCreateError) -> Self {
+        match error {
+            SessionCreateError::DatabaseError(e) => LoginError::DatabaseError(e),
+        }
+    }
+}
+
+#[derive(Error, Debug)]
 pub enum AuthError {
-    DatabaseError(String),
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] crate::repositories::errors::DatabaseError),
+
+    #[error("Invalid or expired token: {0}")]
     InvalidOrExpiredToken(String),
 }
 
@@ -69,23 +88,15 @@ impl AuthService {
     }
 
     pub async fn login(&self, request: LoginRequest) -> Result<Session, LoginError> {
-        let Some(user) = self
-            .user_service
-            .find_by_username(request.username)
-            .await
-            .map_err(LoginError::DatabaseError)?
-        else {
+        let Some(user) = self.user_service.find_by_username(request.username).await? else {
             return Err(LoginError::FailedLogin);
         };
 
         match verify_password(&request.password, &user.hashed_password) {
-            true => {
-                // create session
-                self.session_service
-                    .create(user, request.ip_address, request.user_agent)
-                    .await
-                    .map_err(LoginError::DatabaseError)
-            }
+            true => Ok(self
+                .session_service
+                .create(user, request.ip_address, request.user_agent)
+                .await?),
             false => Err(LoginError::FailedLogin),
         }
     }
@@ -118,8 +129,7 @@ impl AuthService {
                 refresh_token_expires_at: now + constants::auth::REFRESH_TOKEN_LIFETIME,
                 last_access_at: now,
             })
-            .await
-            .map_err(AuthError::DatabaseError)?
+            .await?
         {
             Some(record) => Ok(record),
             None => Err(AuthError::InvalidOrExpiredToken(data_for_expired_token)), // session not found
@@ -132,8 +142,7 @@ impl AuthService {
         let exists = self
             .session_repository
             .exists_by_refresh_token(&refresh_token)
-            .await
-            .map_err(AuthError::DatabaseError)?;
+            .await?;
 
         if !exists {
             return Err(AuthError::InvalidOrExpiredToken(format!(
@@ -142,34 +151,10 @@ impl AuthService {
             )));
         }
 
-        // debug
-        /*
-        let session = match self
-            .session_repository
-            .find_by_refresh_token(&refresh_token)
-            .await
-        {
-            Err(_) => None,
-            Ok(record) => record,
-        };
-        */
-
-        //#[allow(clippy::approx_constant)] // not needed, just showing intent
         let session = self
             .session_repository
             .find_by_refresh_token(&refresh_token)
-            .await
-            .ok()
-            .flatten();
-        /*
-        {
-            Ok(record) => record,
-            Err(_) => None,
-            //Ok(Some(record)) => record,
-            //Ok(None) => return AuthErr("invalid refresh token".to_string()),
-            //Err(e) => return AuthErr(format!("session lookup failed: {e}")),
-        };
-        */
+            .await?;
 
         let (session_id, refresh_token_expires_at) = match session {
             Some(s) => (s.id.to_string(), s.refresh_token_expires_at.to_string()),
@@ -195,8 +180,7 @@ impl AuthService {
                 refresh_token_expires_at: now + constants::auth::REFRESH_TOKEN_LIFETIME,
                 last_refresh_at: now,
             })
-            .await
-            .map_err(AuthError::DatabaseError)?
+            .await?
         {
             Some(record) => Ok(record),
             None => Err(AuthError::InvalidOrExpiredToken(data_for_expired_token)), // session not found
