@@ -1,5 +1,7 @@
 # TODO
 
+- Bug 28 |  hard-coded `id = 72` refresh lookup
+
 - Feature 5.1 | Analyze error management. Identify bugs, diuplication and bad code.
 
 - Feature 5 [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,
@@ -54,6 +56,60 @@
 - Feature 20 [chore/20_modernize_deps] Drop two obsolete dependencies using std/stable replacements: (a) once_cell → std::sync::LazyLock in src/services/Coingecko/currencies_map.rs (Lazy→LazyLock drop-in rename), remove once_cell from Cargo.toml; (b) async-trait → native async fn in traits (stable since Rust 1.75): remove #[async_trait] attributes and imports in src/jobs/job_manager.rs and src/jobs/update_currency_rates_job.rs, update the outdated "not yet natively supported" comment; watch for dyn-dispatch seams that may need explicit future boxing. Behavior-preserving; cargo build + clippy + tests green before merge.
 
 - Feature 21 [feat/21_security_headers_ratelimit] Harden API security surface: (a) in-app rate limiting with tower-governor GovernorLayer on /auth/* routes (~10 req/min per client, keyed from Cf-Connecting-Ip/XFF first hop per fix/09); (b) security response headers via tower-http SetResponseHeader layer: Content-Security-Policy (tuned to frontend origin), X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer; (c) document that HSTS + edge brute-force rules belong in Cloudflare config (Always Use HTTPS + WAF rate-limit rule on /auth/*) — provide exact CF dashboard steps in devop/README.md rather than code. Verify headers present in curl -I responses end-to-end through nginx.
+
+- Feature 22 | Refresh-token lookup is incorrect and hides failures — high severity
+
+    `src/repositories/session_repository.rs::find_by_refresh_token` ignores its argument and queries `WHERE id = 72`. It therefore does not look up the supplied refresh token.
+
+  The same method formats SQL errors into `String`, while `AuthService::refresh_session` uses `.ok().flatten()`. A database outage can consequently be treated as if the token were absent instead of being returned as an infrastructure error.
+
+  `AuthService::refresh_session` also performs an existence query and then a lookup/update sequence. This is duplicate work and creates multiple race windows.
+
+  **Recommendation:** one focused security/correctness change:
+
+  1. bind the refresh token in the lookup;
+  2. propagate lookup errors;
+  3. collapse the pre-check and lookup where possible;
+  4. add tests for valid, absent/expired, and database-failure paths.
+
+  This should not be hidden inside a broad error-type migration.
+
+- Feature 23 | A live refresh token is included in error text — high severity
+
+  `AuthService::refresh_session` includes `refresh_token` in error strings. Tokens must not appear in API responses, logs, or diagnostic error values.
+
+  **Recommendation:** replace the value with a fixed invalid/expired-token message and keep detailed database diagnostics internal.
+
+- Feature 24 | Error contracts are inconsistent — medium/high severity
+
+  Repositories return a mixture of `Result<_, String>` and `Result<_, DatabaseError>`. Services similarly mix `String`, `DatabaseError`, and service-specific enums. Endpoint code therefore relies on string formatting in some places and `ErrorKind` checks in others.
+
+  Examples include:
+
+  - `CurrencyRepository`, `UserRepository`, `SessionRepository`, and several others returning `String`;
+  - `CustodianRepository` and `HoldingRepository` using `DatabaseError` for only some methods;
+  - `CustodianService::create` flattening a structured database error to `Unexpected(String)`;
+  - endpoints mapping errors based on `kind`, while other endpoint paths expose stringified errors.
+
+  This makes it easy to accidentally turn a not-found or duplicate condition into a 500 response and makes error handling hard to test.
+
+  **Recommendation:** define the error contract at each boundary first, then migrate one vertical slice at a time. Preserve context with `#[source]`/transparent variants or explicit context messages rather than flattening everything.
+
+- Feature 25 | Duplicate-user checking is race-prone — medium severity
+
+  `UserService::create` checks whether a username exists and then inserts it. Concurrent requests can both pass the check; the database unique constraint must remain the authority. The pre-check also adds a query and can produce a different error than the insert.
+
+  **Recommendation:** rely on the unique constraint for correctness, translate its violation into a typed `UsernameAlreadyInUse`, and retain the pre-check only if its UX benefit is demonstrated and its race limitation is documented. Add a database-error mapping test.
+
+- Feature 26 | Error messages contain avoidable noise and inconsistent context — low/medium severity
+
+  There are typos (`Currncies`, `Cistodian`, `Sessoon`), inconsistent capitalization, repeated `Failed to ...` wrappers, and commented-out implementations around active repository code. These are readability problems, but changing them should not be mixed with behavior changes unless the affected call site is being migrated.
+
+- Feature 27 | Some failures still panic or are silently discarded — medium severity, broader scope
+
+  Examples include `unwrap`/`expect` in request parsing, scheduler startup, configuration loading, header creation, and token/password paths. Some are valid startup invariants; others are request-dependent and can crash or hide a useful error.
+
+  **Recommendation:** audit these separately. Classify each as an invariant, startup failure, or request/data failure before replacing it. Do not blindly replace all `unwrap` calls with a generic error.
 
 ## Done
 
