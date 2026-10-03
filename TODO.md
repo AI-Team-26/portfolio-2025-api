@@ -1,7 +1,5 @@
 # TODO
 
-- Feature 5.1 | Analyze error management. Identify bugs, diuplication and bad code.
-
 - Feature 5 [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,
  `CreateError`) to enums using `#[derive(thiserror::Error)]` with `#[from]` conversions; remove dead manual constructors and `.map_err()` boilerplate at call sites
 
@@ -57,4 +55,5 @@
 
 ## Done
 
+- Feature 5.1 | Analyze error management. Identify bugs, duplication and bad code. See FEATURE_5_1_ERROR_MANAGEMENT_ANALYSIS.md.
 - Feature 4
