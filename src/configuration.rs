@@ -8,9 +8,17 @@ pub struct Configuration {
     pub log_level: String,
     pub app_domain: String, // used to set CORS
     pub database_connection_string: String,
+    pub database_pool: DatabasePool,
     pub run_database_migrations: bool,
     pub secrets: Secrets,
     pub jobs: Jobs,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct DatabasePool {
+    pub max_connections: u32,
+    pub min_connections: u32,
+    pub acquire_timeout_secs: u64,
 }
 
 #[derive(Deserialize, Clone)]

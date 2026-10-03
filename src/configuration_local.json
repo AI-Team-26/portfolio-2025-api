@@ -4,6 +4,11 @@
     "log_level": "info",
     "app_domain": "my-app.com",
     "database_connection_string": "postgres://portfolio_user:portfolio_password@localhost:8302/portfolio",
+    "database_pool": {
+        "max_connections": 20,
+        "min_connections": 4,
+        "acquire_timeout_secs": 5
+    },
     "run_database_migrations": true,
     "secrets": {
         "coingecko_api_key": "***"

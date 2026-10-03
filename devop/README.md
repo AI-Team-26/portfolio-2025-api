@@ -29,7 +29,19 @@ it will use the _.env_ file (git-ignored) to get the environment variables for s
 The database connection string is stored in the Configuration.  
 The Configuration is filled with a _configuration.json_ file.  
 For local development we have a git-ignored file in the solution,  
-for remote environment a **CONFIGURATION_FILE** environment variable should indicates where to read that file.  
+for remote environment a **CONFIGURATION_FILE** environment variable should indicates where to read that file.
+
+### Database pool tuning
+
+Pool sizing is explicit via the `database_pool` configuration block instead of sqlx defaults:
+
+| Key | Default suggestion | Rationale |
+|-----|--------------------|-----------|
+| `max_connections` | 20 | Postgres is process-per-connection: each open connection costs ~10MB+ RAM and a backend process. 20 covers realistic concurrent request load without pressuring the DB host; raise only if pool saturation is observed under real traffic. |
+| `min_connections` | 4 | Keeps a small warm set so cold starts don't pay TCP+auth latency per request; low enough to free memory when idle. |
+| `acquire_timeout_secs` | 5 | Bounds how long a handler waits for a free connection. A saturated pool then returns an error fast (backpressure) instead of hanging requests until client timeout. |
+
+Tune these values based on observed pool metrics (see Feature 11 `/metrics`, which exposes sqlx pool gauges), not guesswork.
 
 
 ## Test Docker image locally
