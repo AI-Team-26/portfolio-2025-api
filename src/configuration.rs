@@ -15,8 +15,6 @@ pub struct Configuration {
 }
 
 #[derive(Deserialize, Clone)]
-// Explicit pool sizing instead of sqlx defaults: bounds memory (Postgres is
-// process-per-connection) and makes saturated pools fail fast via acquire timeout.
 pub struct DatabasePool {
     pub max_connections: u32,
     pub min_connections: u32,
