@@ -26,8 +26,6 @@ pub struct Jobs {
 impl Configuration {
     pub fn load_from_json_file(file: &str) -> Result<Configuration, String> {
         let content = fs::read_to_string(file)
-            //.expect(&format!("Failed to read configuration file '{}'", file));  <-- it executes format ALWAYS
-            //.unwrap_or_else(|e| panic!("Failed to read configuration file '{}': {}", file, e)); immediate panic
             .map_err(|e| format!("Failed to read configuration file '{}': {}", file, e))?;
 
         let config: Configuration = serde_json::from_str(&content)

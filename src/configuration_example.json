@@ -5,11 +5,10 @@
     "app_domain": "my-app.com",
     "database_connection_string": "postgres://portfolio_user:portfolio_password@server_ip:8303/portfolio",
     "run_database_migrations": false,
-    "admin_email": "admin@portfolio.com",
     "secrets": {
         "coingecko_api_key": "***"
     },
-    "jobs": {        
+    "jobs": {
         "update_exchange_rate_cron": "0 */10 * * * *"
     }
 }
