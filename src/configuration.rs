@@ -1,6 +1,6 @@
 use config::{Config, ConfigError, Environment, File};
-use std::path::PathBuf;
 use serde::Deserialize;
+use std::path::PathBuf;
 
 #[derive(Deserialize, Clone)]
 pub struct Configuration {
@@ -88,16 +88,16 @@ mod tests {
         let mut path = std::env::temp_dir();
         path.push(format!("cfg_test_{}.json", std::process::id()));
         let mut file = std::fs::File::create(&path).expect("failed to create temp config");
-        file.write_all(json.as_bytes()).expect("failed to write temp config");
+        file.write_all(json.as_bytes())
+            .expect("failed to write temp config");
         path.to_string_lossy().to_string()
     }
 
     // Single test (not two): both scenarios mutate the global CONFIGURATION_FILE variable.
     #[test]
     fn layered_precedence_env_beats_file_beats_defaults() {
-        let file = temp_config_file(
-            r#"{"database_connection_string":"postgres://x","server_port":4000}"#,
-        );
+        let file =
+            temp_config_file(r#"{"database_connection_string":"postgres://x","server_port":4000}"#);
         std::env::set_var("CONFIGURATION_FILE", &file);
         std::env::set_var("APP_SERVER_PORT", "5000");
 
