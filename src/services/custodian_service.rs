@@ -3,15 +3,20 @@ use crate::{
     repositories::{custodian_repository::CustodianRepository, errors::DatabaseError},
 };
 
+use thiserror::Error;
+
 #[derive(Clone)]
 pub struct CustodianService {
     repository: CustodianRepository,
 }
 
-#[allow(dead_code)]
+#[derive(Error, Debug)]
 pub enum CreateError {
+    #[error("Custodian name already exists")]
     NameAlreadyExists,
-    Unexpected(String),
+
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] DatabaseError),
 }
 
 impl CustodianService {
@@ -20,14 +25,14 @@ impl CustodianService {
     }
 
     pub async fn create(&self, item: Custodian) -> Result<i32, CreateError> {
-        //self.repository.create(item).await
-        self.repository
-            .create(item)
-            .await
-            .map_err(|err| CreateError::Unexpected(err.message))
+        match self.repository.create(item).await {
+            Ok(id) => Ok(id),
+            Err(DatabaseError::DuplicatedField(_)) => Err(CreateError::NameAlreadyExists),
+            Err(e) => Err(CreateError::DatabaseError(e)),
+        }
     }
 
-    pub async fn single(&self, id: i32, user_id: &str) -> Result<Custodian, String> {
+    pub async fn single(&self, id: i32, user_id: &str) -> Result<Custodian, DatabaseError> {
         self.repository.single(id, user_id).await
     }
 
@@ -39,7 +44,7 @@ impl CustodianService {
         self.repository.delete(id, user_id).await
     }
 
-    pub async fn list(&self) -> Result<Vec<Custodian>, String> {
+    pub async fn list(&self) -> Result<Vec<Custodian>, DatabaseError> {
         self.repository.list().await
     }
 }
