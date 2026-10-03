@@ -2,9 +2,7 @@
 
 - Bug 28 |  hard-coded `id = 72` refresh lookup
 
-- Feature 5.1 | Analyze error management. Identify bugs, diuplication and bad code.
-
-- Feature 5 [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,
+- Feature 5 [SUSPENDED]  [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,
  `CreateError`) to enums using `#[derive(thiserror::Error)]` with `#[from]` conversions; remove dead manual constructors and `.map_err()` boilerplate at call sites
 
 - Feature 7 [refactor/07_config_crate] Replace hand-rolled JSON loading (Configuration::load_from_json_file) with the `config` crate: layered precedence env > file > defaults via Config::builder +
