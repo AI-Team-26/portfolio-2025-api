@@ -1,14 +1,9 @@
 # TODO
 
-- Feature 4 [refactor/04_extract_appstate] Extract `AppState` from `utils/dependency_injection.rs` into a dedicated `src/state.rs` module; update endpoint imports (`crate::dependency_injection::AppState` →
- `crate::state::AppState`) so DI wiring no longer owns the state type
-
 - Feature 5.1 | Analyze error management. Identify bugs, diuplication and bad code.
 
 - Feature 5 [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,
  `CreateError`) to enums using `#[derive(thiserror::Error)]` with `#[from]` conversions; remove dead manual constructors and `.map_err()` boilerplate at call sites
-
-
 
 - Feature 7 [refactor/07_config_crate] Replace hand-rolled JSON loading (Configuration::load_from_json_file) with the `config` crate: layered precedence env > file > defaults via Config::builder +
  Environment::with_prefix("APP").separator("__"); drop CONFIGURATION_FILE path requirement, keep configuration_example.json as template, allow #[serde(default)] fallbacks on non-critical fields
@@ -59,3 +54,7 @@
 - Feature 20 [chore/20_modernize_deps] Drop two obsolete dependencies using std/stable replacements: (a) once_cell → std::sync::LazyLock in src/services/Coingecko/currencies_map.rs (Lazy→LazyLock drop-in rename), remove once_cell from Cargo.toml; (b) async-trait → native async fn in traits (stable since Rust 1.75): remove #[async_trait] attributes and imports in src/jobs/job_manager.rs and src/jobs/update_currency_rates_job.rs, update the outdated "not yet natively supported" comment; watch for dyn-dispatch seams that may need explicit future boxing. Behavior-preserving; cargo build + clippy + tests green before merge.
 
 - Feature 21 [feat/21_security_headers_ratelimit] Harden API security surface: (a) in-app rate limiting with tower-governor GovernorLayer on /auth/* routes (~10 req/min per client, keyed from Cf-Connecting-Ip/XFF first hop per fix/09); (b) security response headers via tower-http SetResponseHeader layer: Content-Security-Policy (tuned to frontend origin), X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer; (c) document that HSTS + edge brute-force rules belong in Cloudflare config (Always Use HTTPS + WAF rate-limit rule on /auth/*) — provide exact CF dashboard steps in devop/README.md rather than code. Verify headers present in curl -I responses end-to-end through nginx.
+
+## Done
+
+- Feature 4
