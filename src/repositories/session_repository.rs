@@ -132,14 +132,15 @@ impl SessionRepository {
     }
     pub async fn find_by_refresh_token(
         &self,
-        _refresh_token: &str,
+        refresh_token: &str,
     ) -> Result<Option<SessionRecord>, String> {
         sqlx::query_as!(
             SessionRecord,
             r#"
             SELECT id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, last_access_at, last_refresh_at, creation_ip_address, creation_user_agent
-            FROM Sessions WHERE id = 72           
-            "#)
+            FROM Sessions WHERE TRIM(refresh_token) = TRIM($1)
+            "#,
+            refresh_token)
                 .fetch_optional(&self.db_pool)
                 .await
                 .map_err(|e| format!("Failed to get Session by refresh token. {}", e))

@@ -1,7 +1,5 @@
 # TODO
 
-- Bug 28 |  hard-coded `id = 72` refresh lookup
-
 - Feature 5 [SUSPENDED]  [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,
  `CreateError`) to enums using `#[derive(thiserror::Error)]` with `#[from]` conversions; remove dead manual constructors and `.map_err()` boilerplate at call sites
 
@@ -111,4 +109,5 @@
 
 ## Done
 
+- Bug 28 | hard-coded `id = 72` refresh lookup — fixed: `find_by_refresh_token` now binds the token (`TRIM(refresh_token) = TRIM($1)`); .sqlx cache refreshed
 - Feature 4

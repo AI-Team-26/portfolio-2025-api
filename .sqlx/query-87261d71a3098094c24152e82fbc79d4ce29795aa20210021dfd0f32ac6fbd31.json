@@ -6,42 +6,90 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "symbol",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "symbol"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "name",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "kind!: CurrencyKind",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "kind"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "is_active",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "is_active"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "precision",
-        "type_info": "Int2"
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "precision"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "is_major",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "is_major"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "coingecko_id",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "currency",
+            "name": "coingecko_id"
+          }
+        }
       }
     ],
     "parameters": {
