@@ -23,10 +23,11 @@ This project is the back-end API for Portfolo.
 | Variable | Used by | Purpose |
 |---|---|---|
 | `DATABASE_URL` | SQLx CLI (`cargo sqlx prepare`, migrations) | Connection string for the local Postgres container |
-| `CONFIGURATION_FILE` | Application runtime | Path to the configuration JSON (see `src/configuration_local.json`) |
+| `CONFIGURATION_FILE` | Application runtime | Optional path to the configuration JSON (template: `src/configuration_example.json`) |
+| `APP_*` | Application runtime | Environment overrides, nested keys use `__`, e.g. `APP_SERVER_PORT`, `APP_SECRETS__COINGECKO_API_KEY` |
 | `RUST_LOG` | _tracing-subscriber_ | Log level filter, e.g. `info` or `your_crate=debug,tower=info` |
 
-The server port and other runtime settings live in the configuration file pointed to by `CONFIGURATION_FILE` (e.g. `server_port`).
+Runtime settings (e.g. `server_port`) are resolved with layered precedence: **environment variables (`APP_*`) > configuration file (`CONFIGURATION_FILE`) > built-in defaults**. The configuration file is optional; only `database_connection_string` has no default.
 
 
 ## Development

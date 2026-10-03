@@ -18,15 +18,11 @@ mod utils;
 // The tokio::main macro is used to run the async main function
 #[tokio::main]
 async fn main() {
-    let config_file = std::env::var("CONFIGURATION_FILE").expect(
-        "CONFIGURATION_FILE environment variable must be set (.env file can be used to set it).",
-    );
+    if let Ok(config_file) = std::env::var("CONFIGURATION_FILE") {
+        println!("CONFIGURATION_FILE: '{}'", config_file);
+    }
 
-    //eprintln!("Current dir: {:?}", std::env::current_dir());
-    println!("CONFIGURATION_FILE: '{}'", config_file);
-
-    let config =
-        Configuration::load_from_json_file(&config_file).expect("Failed to create Configuration");
+    let config = Configuration::load().expect("Failed to create Configuration");
 
     println!(
         "Configuration loaded. Environment: {}. Log level: {}.",
