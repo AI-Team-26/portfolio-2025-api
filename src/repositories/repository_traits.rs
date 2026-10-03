@@ -14,13 +14,13 @@ pub trait BaseRepository {
             //Ok(row) => Ok(row.get(0)), // assumes id is the first column
             Ok(row) => Ok(row.get("id")),
             Err(SqlxError::Database(e)) => match e.is_unique_violation() {
-                true => Err(DatabaseError::duplicated_field(e.to_string())),
+                true => Err(DatabaseError::DuplicatedField(e.to_string())),
                 _ => match e.code() {
-                    Some(code) => Err(DatabaseError::generic(format!("Code: {}. {}", code, e))),
-                    None => Err(DatabaseError::generic(e.to_string())),
+                    Some(code) => Err(DatabaseError::Generic(format!("Code: {}. {}", code, e))),
+                    None => Err(DatabaseError::Generic(e.to_string())),
                 },
             },
-            Err(err) => Err(DatabaseError::generic(err.to_string())),
+            Err(err) => Err(DatabaseError::Generic(err.to_string())),
         }
     }
 
@@ -29,7 +29,7 @@ pub trait BaseRepository {
      */
     fn check_result(&self, result: PgQueryResult) -> Result<(), DatabaseError> {
         match result.rows_affected() == 0 {
-            true => Err(DatabaseError::record_not_found()),
+            true => Err(DatabaseError::RecordNotFound),
             false => Ok(()),
         }
     }

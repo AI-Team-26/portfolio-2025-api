@@ -28,6 +28,6 @@ pub async fn update(
         .await
     {
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e.message),
+        Err(e) => response_error(&e.to_string()),
     }
 }

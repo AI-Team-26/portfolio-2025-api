@@ -2003,6 +2003,7 @@ dependencies = [
  "serde_with",
  "smol",
  "sqlx",
+ "thiserror",
  "tokio",
  "tokio-cron-scheduler",
  "tower-http 0.7.1",

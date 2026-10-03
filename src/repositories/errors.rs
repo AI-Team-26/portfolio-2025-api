@@ -1,59 +1,29 @@
-#[derive(PartialEq)]
-#[allow(dead_code)]
-pub enum ErrorKind {
-    DuplicatedField,
+use thiserror::Error;
+
+#[derive(Error, Debug, PartialEq)]
+pub enum DatabaseError {
+    #[error("Duplicate field: {0}")]
+    DuplicatedField(String),
+
+    #[error("Record not found")]
     RecordNotFound,
-    Generic,
-}
 
-#[allow(dead_code)]
-pub struct DatabaseError {
-    pub message: String,
-    pub kind: ErrorKind,
-}
-
-#[allow(dead_code)]
-impl DatabaseError {
-    pub fn duplicated_field(message: String) -> Self {
-        DatabaseError {
-            message,
-            kind: ErrorKind::DuplicatedField,
-        }
-    }
-
-    pub fn record_not_found() -> Self {
-        DatabaseError {
-            message: "Record not found.".to_string(),
-            kind: ErrorKind::RecordNotFound,
-        }
-    }
-
-    pub fn record_not_found_with_id(id: i32) -> Self {
-        DatabaseError {
-            message: format!("Record not found. ID: {}.", id),
-            kind: ErrorKind::RecordNotFound,
-        }
-    }
-
-    pub fn generic(message: String) -> Self {
-        DatabaseError {
-            message,
-            kind: ErrorKind::Generic,
-        }
-    }
-}
-
-/* example with thiserror crate to define the behaviour of Display (for having .to_string()) */
-/*
-#[derive(thiserror::Error, Debug)]
-pub enum CustodianError {
-    #[error("Duplicate custodian name: {0}")]
-    DuplicateName(String),
+    #[error("Record not found with ID: {0}")]
+    #[allow(dead_code)]
+    RecordNotFoundWithId(i32),
 
     #[error("Database error: {0}")]
-    DatabaseError(String),
-
-    #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error),
+    Generic(String),
 }
-*/
+
+impl From<String> for DatabaseError {
+    fn from(error: String) -> Self {
+        Self::Generic(error)
+    }
+}
+
+impl From<&str> for DatabaseError {
+    fn from(error: &str) -> Self {
+        Self::Generic(error.to_owned())
+    }
+}

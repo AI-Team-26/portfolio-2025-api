@@ -17,23 +17,6 @@ impl CustodianRepository {
     }
 
     pub async fn create(&self, custodian: Custodian) -> Result<i32, DatabaseError> {
-        /*  this returns an anonymous struct a dynamic
-        let result = sqlx::query!(
-            r#"
-                INSERT INTO Custodian (name, kind, description, url, wallet_address, account_country_code)
-                VALUES ($1, $2, $3, $4, $5, $6)
-                RETURNING id
-            "#,
-            custodian.name,
-            custodian.kind as CustodianKind,
-            custodian.description,
-            custodian.url,
-            custodian.wallet_address,
-            custodian.account_country_code
-        )
-        .fetch_one(&self.db_pool)
-        .await;
-        */
         let result = sqlx::query(
             r#"
                 INSERT INTO Custodians (user_id, name, custodian, account, kind, color_code, description)
@@ -72,8 +55,7 @@ impl CustodianRepository {
         )
         .execute(&self.db_pool)
         .await
-        //.map_err(|e| e.to_string())?;
-        .map_err(|e| DatabaseError::generic(e.to_string()))?;
+        .map_err(|e| DatabaseError::Generic(format!("Failed to update Custodian. {e}")))?;
 
         self.check_result(result)
     }
@@ -86,12 +68,12 @@ impl CustodianRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(|e| DatabaseError::generic(e.to_string()))?;
+        .map_err(|e| DatabaseError::Generic(format!("Failed to delete Custodian. {e}")))?;
 
         self.check_result(result)
     }
 
-    pub async fn single(&self, id: i32, user_id: &str) -> Result<Custodian, String> {
+    pub async fn single(&self, id: i32, user_id: &str) -> Result<Custodian, DatabaseError> {
         let item =
             sqlx::query_as!(
                 Custodian,
@@ -101,11 +83,11 @@ impl CustodianRepository {
                 user_id, id)
                     .fetch_one(&self.db_pool)
                     .await
-                    .map_err(|e| format!("Failed to get Cistodian of user. {}", e))?;
+                    .map_err(|e| DatabaseError::Generic(format!("Failed to get Custodian. {e}")))?;
         Ok(item)
     }
 
-    pub async fn list(&self) -> Result<Vec<Custodian>, String> {
+    pub async fn list(&self) -> Result<Vec<Custodian>, DatabaseError> {
         let custodians = sqlx::query_as!(Custodian,
             r#"
                 SELECT id, user_id, name, custodian, account, kind as "kind!: CustodianKind", color_code, description
@@ -114,7 +96,7 @@ impl CustodianRepository {
         )
         .fetch_all(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| DatabaseError::Generic(format!("Failed to list Custodians. {e}")))?;
 
         Ok(custodians)
     }
