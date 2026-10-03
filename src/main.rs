@@ -42,7 +42,9 @@ async fn main() {
     let db_pool = PgPoolOptions::new()
         .max_connections(config.database_pool.max_connections)
         .min_connections(config.database_pool.min_connections)
-        .acquire_timeout(Duration::from_secs(config.database_pool.acquire_timeout_secs))
+        .acquire_timeout(Duration::from_secs(
+            config.database_pool.acquire_timeout_secs,
+        ))
         .connect(&config.database_connection_string)
         .await
         .unwrap_or_else(|e| {
