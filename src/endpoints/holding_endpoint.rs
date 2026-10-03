@@ -1,7 +1,7 @@
 use crate::endpoints::models::holding_models as models;
 use crate::endpoints::request_json_validator::ValidJson;
 use crate::endpoints::response_utils::*;
-use crate::repositories::errors::ErrorKind;
+use crate::repositories::errors::DatabaseError;
 use crate::state::AppState;
 use crate::utils::auth_middleware::Session;
 use axum::extract::State;
@@ -24,7 +24,7 @@ pub async fn create(
         .await
     {
         Ok(new_id) => response_created_new_id(new_id),
-        Err(e) => response_error(&e),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -44,7 +44,7 @@ pub async fn update(
         .await
     {
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e.message),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -55,8 +55,15 @@ pub async fn delete(
 ) -> impl IntoResponse {
     match state.holding_service.delete(&session.user_id, id).await {
         Ok(()) => response_ok(()),
-        Err(e) if e.kind == ErrorKind::RecordNotFound => response_not_found(&e.message),
-        Err(e) => response_error(&e.message),
+        Err(e)
+            if matches!(
+                e,
+                DatabaseError::RecordNotFound | DatabaseError::RecordNotFoundWithId(_)
+            ) =>
+        {
+            response_not_found(&e.to_string())
+        }
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -71,7 +78,7 @@ pub async fn single(
         .await
     {
         Ok(record) => response_ok(record),
-        Err(e) => response_error(e.as_str()),
+        Err(e) => response_error(&e.to_string()),
     }
 }
 
@@ -96,7 +103,7 @@ macro_rules! get_user {
         match $state.user_service.get(&$session.user_id).await {
             Ok(Some(user)) => user,
             Ok(None) => return response_bad_request("User not found"),
-            Err(e) => return response_error(&e),
+            Err(e) => return response_error(&e.to_string()),
         }
     };
 }
@@ -120,6 +127,6 @@ pub async fn list(
                 .map(|entity| entity.into())
                 .collect::<Vec<models::Custodian>>();
         },*/
-        Err(e) => response_error(e.as_str()),
+        Err(e) => response_error(&e.to_string()),
     }
 }

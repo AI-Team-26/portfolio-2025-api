@@ -8,10 +8,16 @@ axum = "0.8.9"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 tokio = { version = "1.53.1", features = ["full"] }
+thiserror = "2.0"
+anyhow = "1.0"
 # tokio + native-tls
 sqlx = { version = "0.9.0", features = [ "runtime-tokio", "tls-native-tls", "postgres", "migrate", "chrono", "bigdecimal" ] }
 # Add CORS support
-tower-http = { version = "0.7.1", features = ["cors"] }
+tower-http = { version = "0.7.1", features = ["cors", "sensitive-headers", "set-header", "compression-full", "add-extension"] }
+# Rate limiting
+tower_governor = { version = "0.7", features = ["axum"] }
+# Rate limiting - governor crate
+governor = { version = "0.8", features = ["std"] }
 uuid = { version = "1.26.1", features = ["v4", "serde"] }
 rand = "0.10.3"
 rand_core = "0.10"

@@ -1,6 +1,6 @@
 use crate::{
     configuration::Configuration,
-    utils::{cors::RouterExtensions as _, dependency_injection},
+    utils::{cors::RouterExtensions as _, dependency_injection, security_middleware},
 };
 use sqlx::PgPool;
 use tokio::net::TcpListener;
@@ -66,9 +66,21 @@ async fn main() {
     jobs::job_manager::schedule_jobs(&config, app_state.clone()).await;
     info!("... done");
 
+    // Create rate limiter config
+    let rate_limit_config = security_middleware::RateLimitConfig {
+        requests_per_second: 100,
+        burst_size: 200,
+    };
+
     let app = utils::routing::set_routes(app_state.clone())
         .with_state(app_state)
-        .set_cors(&config.app_domain);
+        .set_cors(&config.app_domain)
+        // Rate limiting middleware
+        .layer(security_middleware::rate_limiter_layer(rate_limit_config))
+        // Secure headers (HSTS, CSP, etc.)
+        .layer(security_middleware::secure_headers_layer().0)
+        .layer(security_middleware::secure_headers_layer().1)
+        .layer(security_middleware::secure_headers_layer().2);
 
     // Bind on server (Azure or Docker container) requires 0.0.0.0
     // Locally it will bind 127.0.0.1 and localhost.

@@ -1,3 +1,4 @@
+use crate::repositories::errors::DatabaseError;
 use crate::repositories::schemas::currency_record::CurrencyOfUserRecord;
 use sqlx::PgPool;
 
@@ -11,7 +12,7 @@ impl CurrencyOfUserRepository {
         Self { db_pool }
     }
 
-    pub async fn list(&self, user_id: &str) -> Result<Vec<CurrencyOfUserRecord>, String> {
+    pub async fn list(&self, user_id: &str) -> Result<Vec<CurrencyOfUserRecord>, DatabaseError> {
         let items = sqlx::query_as!(
             CurrencyOfUserRecord,
             "SELECT id, user_id, currency_id FROM CurrenciesOfUser WHERE user_id = $1",
@@ -19,12 +20,12 @@ impl CurrencyOfUserRepository {
         )
         .fetch_all(&self.db_pool)
         .await
-        .map_err(|e| format!("Failed to get Currncies of user. {}", e))?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to get Currencies of user. {e}")))?;
 
         Ok(items)
     }
 
-    pub async fn create(&self, user_id: String, currency_id: i32) -> Result<(), String> {
+    pub async fn create(&self, user_id: String, currency_id: i32) -> Result<(), DatabaseError> {
         sqlx::query!(
             r#"
                 INSERT INTO CurrenciesOfUser (user_id, currency_id)
@@ -35,12 +36,12 @@ impl CurrencyOfUserRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to create CurrencyOfUser. {e}")))?;
 
         Ok(())
     }
 
-    pub async fn delete(&self, user_id: String, currency_id: i32) -> Result<(), String> {
+    pub async fn delete(&self, user_id: String, currency_id: i32) -> Result<(), DatabaseError> {
         sqlx::query!(
             r#"
                 delete from CurrenciesOfUser WHERE user_id = $1 AND currency_id = $2
@@ -50,7 +51,7 @@ impl CurrencyOfUserRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| DatabaseError::generic(format!("Failed to delete CurrencyOfUser. {e}")))?;
 
         // no need to check rows affected because if 0 it was not found because already deleted
         Ok(())
