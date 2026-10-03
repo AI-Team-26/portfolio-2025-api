@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            Update Sessions SET \n                access_token = $2,\n                access_token_expires_at = $3,\n                refresh_token = $4, \n                refresh_token_expires_at = $5, \n                last_refresh_at = $6\n            WHERE refresh_token = $1 \n                AND refresh_token_expires_at > now()\n            RETURNING id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, last_access_at, last_refresh_at, creation_ip_address, creation_user_agent\n            ",
+  "query": "\n            SELECT id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, last_access_at, last_refresh_at, creation_ip_address, creation_user_agent\n            FROM Sessions WHERE TRIM(refresh_token) = TRIM($1)\n            ",
   "describe": {
     "columns": [
       {
@@ -127,12 +127,7 @@
     ],
     "parameters": {
       "Left": [
-        "Text",
-        "Varchar",
-        "Timestamptz",
-        "Varchar",
-        "Timestamptz",
-        "Timestamptz"
+        "Text"
       ]
     },
     "nullable": [
@@ -149,5 +144,5 @@
       false
     ]
   },
-  "hash": "44a58d00bf8d918b871d5f6372a702da485d2bd94c7920f861501a4750ad1557"
+  "hash": "fdb7827d0db31d0571d1b2722990a6ab23c04ea6c80f288f302c234542551171"
 }
