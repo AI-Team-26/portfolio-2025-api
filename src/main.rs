@@ -2,7 +2,8 @@ use crate::{
     configuration::Configuration,
     utils::{cors::RouterExtensions as _, dependency_injection},
 };
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
 use tokio::net::TcpListener;
 
 mod configuration;
@@ -38,7 +39,11 @@ async fn main() {
     info!("Logging is set up.");
 
     info!("Connect to database...");
-    let db_pool = PgPool::connect(&config.database_connection_string)
+    let db_pool = PgPoolOptions::new()
+        .max_connections(config.database_pool.max_connections)
+        .min_connections(config.database_pool.min_connections)
+        .acquire_timeout(Duration::from_secs(config.database_pool.acquire_timeout_secs))
+        .connect(&config.database_connection_string)
         .await
         .unwrap_or_else(|e| {
             fatal_end_exit!(
