@@ -129,8 +129,6 @@ impl AuthService {
     pub async fn refresh_session(&self, refresh_token: String) -> Result<SessionRecord, AuthError> {
         let now = datetime::now();
 
-        // Single authoritative lookup; database failures are propagated as infrastructure errors,
-        // never treated as an absent token.
         if !self
             .session_repository
             .find_by_refresh_token(&refresh_token)
@@ -143,8 +141,6 @@ impl AuthService {
             ));
         }
 
-        // The UPDATE re-checks the token atomically, so a concurrent rotation between the
-        // lookup and the update still resolves to exactly one winner.
         match self
             .session_repository
             .update_for_refresh(UpdateForRefresh {
