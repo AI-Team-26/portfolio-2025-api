@@ -35,12 +35,18 @@ where
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         // Prefer Cf-Connecting-Ip (Cloudflare authoritative), fall back to first hop of X-Forwarded-For
-        let cf_ip: Option<&str> = parts.headers.get("cf-connecting-ip").and_then(|v| v.to_str().ok());
+        let cf_ip: Option<&str> = parts
+            .headers
+            .get("cf-connecting-ip")
+            .and_then(|v| v.to_str().ok());
 
         let ip_address = match cf_ip {
             Some(ip) if !ip.is_empty() => ip.to_string(),
             _ => {
-                let xff: Option<&str> = parts.headers.get("x-forwarded-for").and_then(|v| v.to_str().ok());
+                let xff: Option<&str> = parts
+                    .headers
+                    .get("x-forwarded-for")
+                    .and_then(|v| v.to_str().ok());
                 let first_hop: Option<String> = xff
                     .and_then(|v| v.split(',').next())
                     .map(|h| h.trim().to_string())
@@ -49,10 +55,19 @@ where
             }
         };
 
-        let ua: Option<&str> = parts.headers.get("user-agent").and_then(|v| v.to_str().ok());
-        let user_agent = ua.filter(|s| !s.is_empty()).unwrap_or("unknown").to_string();
+        let ua: Option<&str> = parts
+            .headers
+            .get("user-agent")
+            .and_then(|v| v.to_str().ok());
+        let user_agent = ua
+            .filter(|s| !s.is_empty())
+            .unwrap_or("unknown")
+            .to_string();
 
-        Ok(Self { ip_address, user_agent })
+        Ok(Self {
+            ip_address,
+            user_agent,
+        })
     }
 }
 
@@ -101,7 +116,10 @@ pub async fn login(
     let username = request.username.trim().to_string();
     let password = request.password.trim().to_string();
 
-    debug!("login from ip={} ua={}", client_meta.ip_address, client_meta.user_agent);
+    debug!(
+        "login from ip={} ua={}",
+        client_meta.ip_address, client_meta.user_agent
+    );
 
     let service_request = LoginRequest {
         username,
