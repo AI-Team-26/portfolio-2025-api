@@ -49,22 +49,6 @@
 
 - Feature 21 [feat/21_security_headers_ratelimit] Harden API security surface: (a) in-app rate limiting with tower-governor GovernorLayer on /auth/* routes (~10 req/min per client, keyed from Cf-Connecting-Ip/XFF first hop per fix/09); (b) security response headers via tower-http SetResponseHeader layer: Content-Security-Policy (tuned to frontend origin), X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer; (c) document that HSTS + edge brute-force rules belong in Cloudflare config (Always Use HTTPS + WAF rate-limit rule on /auth/*) — provide exact CF dashboard steps in devop/README.md rather than code. Verify headers present in curl -I responses end-to-end through nginx.
 
-- Feature 22 | Refresh-token lookup is incorrect and hides failures — high severity
-
-    `src/repositories/session_repository.rs::find_by_refresh_token` ignores its argument and queries `WHERE id = 72`. It therefore does not look up the supplied refresh token.
-
-  The same method formats SQL errors into `String`, while `AuthService::refresh_session` uses `.ok().flatten()`. A database outage can consequently be treated as if the token were absent instead of being returned as an infrastructure error.
-
-  `AuthService::refresh_session` also performs an existence query and then a lookup/update sequence. This is duplicate work and creates multiple race windows.
-
-  **Recommendation:** one focused security/correctness change:
-
-  1. bind the refresh token in the lookup;
-  2. propagate lookup errors;
-  3. collapse the pre-check and lookup where possible;
-  4. add tests for valid, absent/expired, and database-failure paths.
-
-  This should not be hidden inside a broad error-type migration.
 
 - Feature 23 | A live refresh token is included in error text — high severity
 
@@ -105,6 +89,7 @@
 
 ## Done
 
+- Feature 22 | Refresh-token lookup correctness: single bound-token lookup with propagated DB errors (`AuthError::DatabaseError`) replacing `.ok().flatten()`; pre-check query removed (`exists_by_refresh_token` deleted); fixed invalid/expired message without secrets. Path tests pending Epic 13 trait seams / testcontainers infra
 - Feature 8 | Explicit database pool tuning (`PgPoolOptions`: max/min connections + acquire timeout in Configuration)
 - Bug 28 | hard-coded `id = 72` refresh lookup — fixed: `find_by_refresh_token` now binds the token (`TRIM(refresh_token) = TRIM($1)`); .sqlx cache refreshed
 - Feature 4

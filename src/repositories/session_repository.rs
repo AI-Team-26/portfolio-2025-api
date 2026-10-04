@@ -114,22 +114,6 @@ impl SessionRepository {
     }
     */
 
-    pub async fn exists_by_refresh_token(&self, refresh_token: &str) -> Result<bool, String> {
-        // First check if the record exists
-        let exists = sqlx::query_scalar!(
-            r#"SELECT EXISTS(SELECT 1 FROM Sessions WHERE TRIM(refresh_token) = TRIM($1))"#,
-            refresh_token
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .map_err(|e| format!("Failed to check if session exists: {}", e))?;
-
-        if !exists.unwrap_or(false) {
-            return Ok(false);
-        }
-
-        Ok(true)
-    }
     pub async fn find_by_refresh_token(
         &self,
         refresh_token: &str,
