@@ -1,5 +1,3 @@
-use async_trait::async_trait;
-
 use crate::{configuration::Configuration, jobs::job_manager::RecurringJob, state::AppState};
 
 #[derive(Clone)]
@@ -13,7 +11,6 @@ impl UpdateCurrencyRatesJob {
     }
 }
 
-#[async_trait]
 impl RecurringJob for UpdateCurrencyRatesJob {
     async fn run(&self) -> () {
         /*match self.app_state.api.ping().await {

@@ -2,7 +2,6 @@ use crate::{
     configuration::Configuration, info, jobs::update_currency_rates_job::UpdateCurrencyRatesJob,
     state::AppState,
 };
-use async_trait::async_trait;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 pub async fn schedule_jobs(config: &Configuration, app_state: AppState) {
@@ -40,9 +39,6 @@ pub async fn schedule_jobs(config: &Configuration, app_state: AppState) {
     });*/
 }
 
-// async_trait] is necessary because Rust async traits are not yet natively supported in stable.
-// Added Send + Sync bounds, which are typically required for types shared across threads.
-#[async_trait]
 pub trait RecurringJob: Send + Sync {
     async fn run(&self) -> ();
 }
