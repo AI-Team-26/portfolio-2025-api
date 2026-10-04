@@ -23,8 +23,13 @@ COPY .sqlx ./.sqlx
 RUN cargo build --release
 
 
-# Runtime stage - use distroless for minimal attack surface
-FROM gcr.io/distroless/cc-debian12
+# Runtime stage - slim Debian; distroless was dropped because it has no package
+# manager, so the curl binary required by the HEALTHCHECK could not be installed
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the binary
 COPY --from=builder /app/target/release/portfolio_api /usr/local/bin/portfolio_api
@@ -37,4 +42,10 @@ ENV CONFIGURATION_FILE=$CONFIGURATION_FILE
 USER 10001:10001
 
 EXPOSE 3000
+
+# Liveness probe.
+# Readiness variant: curl -sf 'http://localhost:3000/health?ready=true'
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD ["curl", "-sf", "http://localhost:3000/health"]
+
 ENTRYPOINT ["/usr/local/bin/portfolio_api"]

@@ -1,3 +1,5 @@
+use sqlx::PgPool;
+
 use crate::services::{
     auth_service::AuthService, currency_rate_service::CurrencyRateService,
     currency_service::CurrencyService, custodian_service::CustodianService,
@@ -6,6 +8,7 @@ use crate::services::{
 
 #[derive(Clone)]
 pub struct AppState {
+    pub db_pool: PgPool,
     pub user_service: UserService,
     pub auth_service: AuthService,
     pub currency_service: CurrencyService,
