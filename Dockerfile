@@ -23,13 +23,17 @@ COPY .sqlx ./.sqlx
 RUN cargo build --release
 
 
-# Runtime stage
-FROM debian:bookworm-slim
+# Tooling stage - provides the static curl used by the HEALTHCHECK below,
+# so the runtime image can stay distroless
+FROM debian:bookworm-slim AS tools
+ARG CURL_VERSION=8.22.0
+ADD https://github.com/stunnel/static-curl/releases/download/${CURL_VERSION}/curl-linux-x86_64-glibc-${CURL_VERSION}.tar.xz /tmp/curl.tar.xz
+RUN tar -xf /tmp/curl.tar.xz -C /usr/local/bin curl
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+# Runtime stage - use distroless for minimal attack surface
+FROM gcr.io/distroless/cc-debian12
 
+COPY --from=tools /usr/local/bin/curl /usr/local/bin/curl
 # Copy the binary
 COPY --from=builder /app/target/release/portfolio_api /usr/local/bin/portfolio_api
 
@@ -45,6 +49,6 @@ EXPOSE 3000
 # Liveness probe.
 # Readiness variant: curl -sf 'http://localhost:3000/health?ready=true'
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD ["curl", "-sf", "http://localhost:3000/health"]
+    CMD ["/usr/local/bin/curl", "-sf", "http://localhost:3000/health"]
 
 ENTRYPOINT ["/usr/local/bin/portfolio_api"]
