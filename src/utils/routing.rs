@@ -9,7 +9,6 @@ pub fn set_routes(app_state: AppState) -> Router<AppState> {
     // Public routes
     let public_routes = Router::new()
         .route("/", get(endpoints::common_endpoint::home))
-        // unauthenticated liveness/readiness probes for orchestrators
         .route("/health", get(endpoints::common_endpoint::health))
         // auth
         .route("/auth/login", post(endpoints::auth_endpoint::login))

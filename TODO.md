@@ -83,6 +83,8 @@
 
   **Recommendation:** audit these separately. Classify each as an invariant, startup failure, or request/data failure before replacing it. Do not blindly replace all `unwrap` calls with a generic error.
 
+- Feature 29 [refactor/29_db_pool_from_state] Now that `AppState` exposes `db_pool` (feat/10_health_endpoint), update endpoint dependency injection where direct database access is needed: source the pool from `AppState` instead of wiring additional repository/service dependencies through constructors and `inject_services`
+
 ## Done
 
 - Feature 10 | `GET /health` two-tier health endpoint: liveness (always 200 while process is up) + readiness (`?ready=true` runs `SELECT 1` on PgPool with ~2s timeout → 503 if DB unreachable); registered as public/unauthenticated route; Dockerfile installs curl and adds `HEALTHCHECK`; proxy/cache-bypass notes in devop/README.md

@@ -23,8 +23,7 @@ COPY .sqlx ./.sqlx
 RUN cargo build --release
 
 
-# Runtime stage - slim Debian; distroless was dropped because it has no package
-# manager, so the curl binary required by the HEALTHCHECK could not be installed
+# Runtime stage
 FROM debian:bookworm-slim
 
 RUN apt-get update \
