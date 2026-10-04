@@ -129,62 +129,22 @@ impl AuthService {
     pub async fn refresh_session(&self, refresh_token: String) -> Result<SessionRecord, AuthError> {
         let now = datetime::now();
 
-        let exists = self
+        // Single authoritative lookup; database failures are propagated as infrastructure errors,
+        // never treated as an absent token.
+        if !self
             .session_repository
-            .exists_by_refresh_token(&refresh_token)
+            .find_by_refresh_token(&refresh_token)
             .await
-            .map_err(AuthError::DatabaseError)?;
-
-        if !exists {
-            return Err(AuthError::InvalidOrExpiredToken(format!(
-                "NOT FOUND - 111 | refresh_token: {}",
-                refresh_token
-            )));
+            .map_err(AuthError::DatabaseError)?
+            .is_some()
+        {
+            return Err(AuthError::InvalidOrExpiredToken(
+                "invalid or expired refresh token".to_string(),
+            ));
         }
 
-        // debug
-        /*
-        let session = match self
-            .session_repository
-            .find_by_refresh_token(&refresh_token)
-            .await
-        {
-            Err(_) => None,
-            Ok(record) => record,
-        };
-        */
-
-        //#[allow(clippy::approx_constant)] // not needed, just showing intent
-        let session = self
-            .session_repository
-            .find_by_refresh_token(&refresh_token)
-            .await
-            .ok()
-            .flatten();
-        /*
-        {
-            Ok(record) => record,
-            Err(_) => None,
-            //Ok(Some(record)) => record,
-            //Ok(None) => return AuthErr("invalid refresh token".to_string()),
-            //Err(e) => return AuthErr(format!("session lookup failed: {e}")),
-        };
-        */
-
-        let (session_id, refresh_token_expires_at) = match session {
-            Some(s) => (s.id.to_string(), s.refresh_token_expires_at.to_string()),
-            None => (String::new(), String::new()),
-        };
-
-        let data_for_expired_token = format!(
-            "refresh_session.
-            refresh_token: {}, 
-            session: {},
-            session.refresh_token_expires_at: {}
-            ",
-            refresh_token, session_id, refresh_token_expires_at
-        );
-
+        // The UPDATE re-checks the token atomically, so a concurrent rotation between the
+        // lookup and the update still resolves to exactly one winner.
         match self
             .session_repository
             .update_for_refresh(UpdateForRefresh {
@@ -199,7 +159,9 @@ impl AuthService {
             .map_err(AuthError::DatabaseError)?
         {
             Some(record) => Ok(record),
-            None => Err(AuthError::InvalidOrExpiredToken(data_for_expired_token)), // session not found
+            None => Err(AuthError::InvalidOrExpiredToken(
+                "invalid or expired refresh token".to_string(),
+            )),
         }
     }
 }
