@@ -59,6 +59,7 @@ pub async fn inject_services(config: &Configuration, db_pool: PgPool) -> AppStat
 
     AppState {
         //config: config.clone(),
+        db_pool: db_pool.clone(),
         user_service: user_service.clone(),
         //session_service: session_service.clone(),
         auth_service: auth_service.clone(),

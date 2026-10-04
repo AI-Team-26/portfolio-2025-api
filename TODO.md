@@ -8,10 +8,6 @@
 - Feature 9 [fix/09_session_client_metadata] Populate real client metadata at login (auth_endpoint.rs currently stores empty strings): read IP from X-Forwarded-For first hop (trusted-proxy chain:
  Cloudflare → nginx; consider Cf-Connecting-Ip as primary since Cloudflare sets it authoritatively) and User-Agent from headers into LoginRequest; validate non-empty before persisting to Sessions
 
-- Feature 10 [feat/10_health_endpoint] Add GET /health endpoint returning 200 "OK". Two-tier design: (a) liveness probe — always 200 when process is up, used by orchestrators to decide restarts; (b)
- readiness check via ?ready=true query param (or separate /readyz route) that runs SELECT 1 against PgPool with short timeout (~2s) and returns 503 if DB unreachable. Register route before auth middleware so
- it's unauthenticated. Update Dockerfile HEALTHCHECK to curl /health. Document expected behavior behind Cloudflare/nginx (proxy should bypass cache for this route).
-
 - Feature 11 [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
  (http_requests_total{method,route,status}, http_request_duration_seconds), in-flight requests gauge, and sqlx pool gauges (size, idle, waiting_tasks) polled from PgPoolMetrics — enables measuring pool
  saturation to inform refactor/08_db_pool_tuning values. Route must be excluded from auth middleware; restrict access at nginx level (allow internal network/scrapers only, deny public) since metric labels can
@@ -87,8 +83,11 @@
 
   **Recommendation:** audit these separately. Classify each as an invariant, startup failure, or request/data failure before replacing it. Do not blindly replace all `unwrap` calls with a generic error.
 
+- Feature 29 [refactor/29_db_pool_from_state] Now that `AppState` exposes `db_pool` (feat/10_health_endpoint), update endpoint dependency injection where direct database access is needed: source the pool from `AppState` instead of wiring additional repository/service dependencies through constructors and `inject_services`
+
 ## Done
 
+- Feature 10 | `GET /health` two-tier health endpoint: liveness (always 200 while process is up) + readiness (`?ready=true` runs `SELECT 1` on PgPool with ~2s timeout → 503 if DB unreachable); registered as public/unauthenticated route; Dockerfile installs curl and adds `HEALTHCHECK`; proxy/cache-bypass notes in devop/README.md
 - Feature 22 | Refresh-token lookup correctness: single bound-token lookup with propagated DB errors (`AuthError::DatabaseError`) replacing `.ok().flatten()`; pre-check query removed (`exists_by_refresh_token` deleted); fixed invalid/expired message without secrets. Path tests pending Epic 13 trait seams / testcontainers infra
 - Feature 8 | Explicit database pool tuning (`PgPoolOptions`: max/min connections + acquire timeout in Configuration)
 - Bug 28 | hard-coded `id = 72` refresh lookup — fixed: `find_by_refresh_token` now binds the token (`TRIM(refresh_token) = TRIM($1)`); .sqlx cache refreshed
