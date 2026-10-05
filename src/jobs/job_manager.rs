@@ -40,5 +40,6 @@ pub async fn schedule_jobs(config: &Configuration, app_state: AppState) {
 }
 
 pub trait RecurringJob: Send + Sync {
+    #[allow(async_fn_in_trait)]
     async fn run(&self) -> ();
 }

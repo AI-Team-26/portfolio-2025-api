@@ -22,7 +22,7 @@ use crate::{
 /// Extracts client IP and User-Agent from HTTP headers.
 /// Prefers Cf-Connecting-Ip (set authoritatively by Cloudflare), falls back to first hop of X-Forwarded-For.
 #[derive(Debug)]
-pub(crate) struct ClientMetadata {
+pub struct ClientMetadata {
     pub ip_address: String,
     pub user_agent: String,
 }
