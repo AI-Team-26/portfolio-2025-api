@@ -30,5 +30,10 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features=["json"] }
 validator = { version = "0.20", features = ["derive"] }
 
+[dev-dependencies]
+testcontainers = "0.26"
+testcontainers-modules = { version = "0.14", features = ["postgres"] }
+tokio-test = "0.4.5"
+
 #[dev-dependencies]
 #sqlx-cli = { version = "0.8.6", features = ["postgres"] }

@@ -19,6 +19,8 @@
  collector deployed. Phase 1 (this PR): local span hierarchy (HTTP handler → service → repository SQL) + trace ID in logs. Phase 2 (follow-up, needs infra): OTLP export to Grafana Tempo/Jaeger — blocked until
  an OTLP collector exists in devops stack; leave exporter disabled-by-default via configuration flag enable_distributed_tracing (default false).
 
+- Feature 30 [test/06_integration_test_coverage] Extend endpoint integration tests (tests/integration_tests.rs, testcontainers Postgres): `list_of_user` endpoint, `update` variants for currency/custodian/holding, custodian CRUD (single/create/delete)
+
 - Epic 13 | Introduce mocking and service-level unit tests (mockall + trait seams; currently only pure-function units exist, services/repositories untested)
   - Feature 13.1 [refactor/13_1_user_repo_trait] Introduce trait seam for ONE repository: define `trait UserRepository` (find_by_username, create) in src/repositories/user_repository.rs with
  #[cfg_attr(test, mockall::automock)]; rename struct → UserRepositoryImpl implementing the trait; UserService/AuthService constructors take Arc<dyn UserRepository>; wire impl at startup in main.rs/DI. Add

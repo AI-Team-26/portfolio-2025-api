@@ -50,7 +50,7 @@ macro_rules! fatal_end_exit {
     }};
 }
 
-pub(crate) fn setup_logging(log_level: &str) {
+pub fn setup_logging(log_level: &str) {
     let log_level = match log_level.to_lowercase().as_str() {
         "trace" => tracing::Level::TRACE,
         "debug" => tracing::Level::DEBUG,
