@@ -7,6 +7,9 @@
 // CONFIGURATION_FILE to a local json file and the container url as the
 // database_connection_string (no container created in that case).
 
+/// Default path to the local configuration file used by integration tests.
+const DEFAULT_CONFIG_PATH: &str = "src/configuration_local.json";
+
 use portfolio_api::repositories::schemas::session_record::SessionWithUser;
 use sqlx::PgPool;
 use testcontainers::runners::AsyncRunner;
@@ -53,7 +56,7 @@ fn load_config() -> portfolio_api::configuration::Configuration {
     use std::env;
     // Use the local configuration file from the repo
     let cfg_path = env::var("CONFIGURATION_FILE")
-        .unwrap_or_else(|_| "src/configuration_local.json".to_string());
+        .unwrap_or_else(|| DEFAULT_CONFIG_PATH.to_string());
     portfolio_api::configuration::Configuration::load_from_json_file(&cfg_path)
         .expect("Failed to load configuration")
 }
