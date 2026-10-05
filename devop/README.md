@@ -1,9 +1,9 @@
 # Devop
 
 Ports:
-- 50300: website
-- 50301: api
-- 50302: database
+- 8300: website
+- 8301: api
+- 8302: database
 
 ## Docker containers for API and Database
 
@@ -29,8 +29,36 @@ it will use the _.env_ file (git-ignored) to get the environment variables for s
 The database connection string is stored in the Configuration.  
 The Configuration is filled with a _configuration.json_ file.  
 For local development we have a git-ignored file in the solution,  
-for remote environment a **CONFIGURATION_FILE** environment variable should indicates where to read that file.  
+for remote environment a **CONFIGURATION_FILE** environment variable should indicates where to read that file.
 
+### Database pool tuning
+
+Pool sizing is explicit via the `database_pool` configuration block instead of sqlx defaults:
+
+| Key | Default suggestion | Rationale |
+|-----|--------------------|-----------|
+| `max_connections` | 20 | Postgres is process-per-connection: each open connection costs ~10MB+ RAM and a backend process. 20 covers realistic concurrent request load without pressuring the DB host; raise only if pool saturation is observed under real traffic. |
+| `min_connections` | 4 | Keeps a small warm set so cold starts don't pay TCP+auth latency per request; low enough to free memory when idle. |
+| `acquire_timeout_secs` | 5 | Bounds how long a handler waits for a free connection. A saturated pool then returns an error fast (backpressure) instead of hanging requests until client timeout. |
+
+Tune these values based on observed pool metrics (see Feature 11 `/metrics`, which exposes sqlx pool gauges), not guesswork.
+
+
+### Health endpoint
+
+`GET /health` is public (no auth):
+
+| Request | Meaning |
+|---------|---------|
+| `GET /health` | **Liveness**: always `200 OK` while the process runs. Orchestrators use this to decide restarts. |
+| `GET /health?ready=true` | **Readiness**: runs `SELECT 1` against Postgres with a ~2s timeout; `200 OK` if reachable, `503 Service Unavailable` otherwise. Use this before routing traffic (e.g. during rollouts). |
+
+The Dockerfile `HEALTHCHECK` curls `/health` every 30s.
+
+**Proxying notes:**
+- nginx: proxy `/health` like any other route but ensure it is not cached (`proxy_cache off` / excluded from cache rules).
+- Cloudflare: set caching level to "Bypass Cache" for `/health*` (Cache Rules → URL path starts with `/health`). Caching health responses hides real outages from orchestrators.
+- Behind trusted proxies, readiness reflects the API→DB leg only; end-to-end checks belong at the load balancer/proxy level.
 
 ## Test Docker image locally
 

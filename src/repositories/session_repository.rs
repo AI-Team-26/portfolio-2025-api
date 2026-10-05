@@ -1,6 +1,8 @@
+use crate::repositories::schemas::session_record::{
+    SessionRecord, SessionWithUser, UpdateForAccess, UpdateForRefresh,
+};
+use crate::warn;
 use sqlx::PgPool;
-use crate::repositories::schemas::session_record::{SessionRecord, SessionWithUser, UpdateForAccess, UpdateForRefresh};
-use crate::{warn};
 #[derive(Clone)]
 pub struct SessionRepository {
     db_pool: PgPool,
@@ -8,7 +10,7 @@ pub struct SessionRepository {
 
 impl SessionRepository {
     pub fn new(db_pool: PgPool) -> Self {
-        Self {db_pool}
+        Self { db_pool }
     }
 
     pub async fn create(&self, item: SessionRecord) -> Result<i32, String> {
@@ -34,9 +36,12 @@ impl SessionRepository {
         Ok(row.id)
     }
 
-    pub async fn update_for_access(&self, update: UpdateForAccess,) -> Result<Option<SessionWithUser>, String> {
+    pub async fn update_for_access(
+        &self,
+        update: UpdateForAccess,
+    ) -> Result<Option<SessionWithUser>, String> {
         warn!("update_for_access");
-        Ok(sqlx::query_as!(
+        sqlx::query_as!(
             SessionWithUser,
             r#"
             UPDATE Sessions
@@ -61,12 +66,15 @@ impl SessionRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())
     }
 
-    pub async fn update_for_refresh(&self, update: UpdateForRefresh) -> Result<Option<SessionRecord>, String> {
+    pub async fn update_for_refresh(
+        &self,
+        update: UpdateForRefresh,
+    ) -> Result<Option<SessionRecord>, String> {
         warn!("update_for_refresh");
-        Ok(sqlx::query_as!(
+        sqlx::query_as!(
             SessionRecord,
             r#"
             Update Sessions SET 
@@ -88,7 +96,7 @@ impl SessionRepository {
         )
         .fetch_optional(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())
     }
     /*
     pub async fn find_by_access_token(&self, access_token: &str) -> Result<Option<SessionRecord>, String> {
@@ -98,7 +106,7 @@ impl SessionRepository {
             r#"
             SELECT id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, creation_ip_address, creation_user_agent
             FROM Sessions WHERE access_token = $1
-            "#, 
+            "#,
             access_token)
                 .fetch_optional(&self.db_pool)
                 .await
@@ -106,29 +114,17 @@ impl SessionRepository {
     }
     */
 
-    pub async fn exists_by_refresh_token(&self, refresh_token: &str) -> Result<bool, String> {
-        // First check if the record exists
-        let exists = sqlx::query_scalar!(
-            r#"SELECT EXISTS(SELECT 1 FROM Sessions WHERE TRIM(refresh_token) = TRIM($1))"#,
-            refresh_token
-        )
-        .fetch_one(&self.db_pool)
-        .await
-        .map_err(|e| format!("Failed to check if session exists: {}", e))?;
-
-        if !exists.unwrap_or(false) {
-            return Ok(false);
-        }
-
-        Ok(true)
-    }
-    pub async fn find_by_refresh_token(&self, _refresh_token: &str) -> Result<Option<SessionRecord>, String> {
+    pub async fn find_by_refresh_token(
+        &self,
+        refresh_token: &str,
+    ) -> Result<Option<SessionRecord>, String> {
         sqlx::query_as!(
             SessionRecord,
             r#"
             SELECT id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, last_access_at, last_refresh_at, creation_ip_address, creation_user_agent
-            FROM Sessions WHERE id = 72           
-            "#)
+            FROM Sessions WHERE TRIM(refresh_token) = TRIM($1)
+            "#,
+            refresh_token)
                 .fetch_optional(&self.db_pool)
                 .await
                 .map_err(|e| format!("Failed to get Session by refresh token. {}", e))

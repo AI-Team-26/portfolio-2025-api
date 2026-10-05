@@ -1,15 +1,17 @@
+use crate::{
+    repositories::schemas::currency_rate_record::CurrencyRateRecord, utils::datetime::Date,
+};
 use rust_decimal::Decimal;
 use serde::Deserialize;
-use crate::{repositories::schemas::currency_rate_record::CurrencyRateRecord, utils::datetime::Date};
 
 #[derive(serde::Serialize)]
-#[serde(rename_all ="camelCase")] 
+#[serde(rename_all = "camelCase")]
 pub struct CurrencyRate {
     pub base_currency_id: i32,
     pub quote_currency_id: i32,
     pub date: Date,
     pub rate: Decimal,
-    pub source: String, 
+    pub source: String,
 }
 
 impl From<CurrencyRateRecord> for CurrencyRate {
@@ -24,15 +26,13 @@ impl From<CurrencyRateRecord> for CurrencyRate {
     }
 }
 
-
-
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, validator::Validate)]
 pub struct AtDateQuery {
+    #[validate(length(min = 1))]
     pub date: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, validator::Validate)]
 pub struct SinglePairQuery {
     pub base: i32,
     pub quote: i32,

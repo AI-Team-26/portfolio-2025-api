@@ -6,42 +6,90 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id",
-        "type_info": "Bpchar"
+        "type_info": "Bpchar",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "custodian_id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "custodian_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "currency_id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "currency_id"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "date",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "date"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "action",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "action"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "amount",
-        "type_info": "Numeric"
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "amount"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "note",
-        "type_info": "Varchar"
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "holdings",
+            "name": "note"
+          }
+        }
       }
     ],
     "parameters": {

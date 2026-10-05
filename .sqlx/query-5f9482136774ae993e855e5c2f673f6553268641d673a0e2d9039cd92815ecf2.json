@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "currenciesofuser",
+            "name": "id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_id",
-        "type_info": "Bpchar"
+        "type_info": "Bpchar",
+        "origin": {
+          "Table": {
+            "table": "currenciesofuser",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "currency_id",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "currenciesofuser",
+            "name": "currency_id"
+          }
+        }
       }
     ],
     "parameters": {

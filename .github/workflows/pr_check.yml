@@ -43,14 +43,24 @@ jobs:
       - name: ✅ Check
         run: cargo check --all-targets
 
-      - name: 🔨 Build
-        run: cargo build
+      - name: 📐 Format check
+        run: cargo fmt --check
 
+      # clippy will also build
+      - name: 🧹 Clippy lint
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      # Commented out for when/if we will have lib.rs
       # Unit tests (library): pure logic, no Docker required.
-      - name: 🧪 Unit Tests
-        run: cargo test --lib
+      #- name: 🧪 Unit Tests
+      #  run: cargo test --lib
 
+      # Unit tests (binary targets): pure logic, no Docker required.
+      - name: 🧪 Unit Tests
+        run: cargo test --bins
+
+      # Commented out untill we have a integration tests project
       # Integration tests: spin up a real Postgres via testcontainers
       # (one container per test, hence --test-threads=1).
-      - name: 🧪 Integration Tests
-        run: cargo test --test integration_tests -- --test-threads=1
+      #- name: 🧪 Integration Tests
+      #  run: cargo test --test integration_tests -- --test-threads=1

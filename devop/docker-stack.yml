@@ -5,10 +5,10 @@ services:
   api:
     image: ghcr.io/alex-piccione/portfolio-api:latest
     ports:
-      # port exposed on server: 50301
+      # port exposed on server: 8301
       # the IP is used to allow main NGINX to access the localhost service
-      # - 127.0.0.1:50301:80  Docker Swarm does not allow to change IP, so use 0.0.0.0
-      - 0.0.0.0:50301:3000
+      # - 127.0.0.1:8301:80  Docker Swarm does not allow to change IP, so use 0.0.0.0
+      - 0.0.0.0:8301:3000
 
     volumes:
       - /Data/projects/portfolio/logs/api:/logs

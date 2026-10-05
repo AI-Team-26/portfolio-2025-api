@@ -7,12 +7,14 @@ on:
 # permission for creating a package
 permissions:
   contents: read
-  packages: write
+  packages: none
+  #packages: write no need, "none" was working before
 
 env:
   # it MUST contain start with ghcr.io/ and it MUST be lowercase
-  IMAGE: ghcr.io/${{ github.repository_owner }}/portfolio-api
-  VERSION: 0.1.${{ github.run_number }}
+  #IMAGE: ghcr.io/${{ github.repository_owner }}/portfolio-api
+  IMAGE: ghcr.io/ai-team-26/portfolio-api
+  VERSION: 0.2.${{ github.run_number }}
   CONFIGURATION_FILE: /Data/projects/
 
 jobs:
@@ -36,6 +38,7 @@ jobs:
       - name: 🏗️ Build and push Docker image
         uses: docker/build-push-action@v5
         with:
+          #context: .
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
@@ -55,18 +58,16 @@ jobs:
     needs: docker_image
     steps:
       - name: Run server script
+        env:
+          IMAGE_TAG: ${{ env.IMAGE }}:${{ env.VERSION }}
         run: |
-          echo "Running deploy script for API service..."
+          set -euo pipefail
+          echo "Running deploy script for API service (${IMAGE_TAG}) ..."
           mkdir -p ~/.ssh
           echo "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          trap 'rm -f ~/.ssh/id_rsa' EXIT # No matter how this script stops, delete the private key file on the way out.
           ssh-keyscan -H ${{ secrets.SERVER_IP }} > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/id_rsa
           
           # Call the deploy script on the server (adjust the script name as needed)
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} project-portfolio_deploy-api
-          STATUS=$?
-          rm ~/.ssh/id_rsa
-          if [ $STATUS -ne 0 ]; then
-            echo "ERROR: Remote deploy script failed with exit code $STATUS"
-            exit $STATUS
-          fi
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} project-portfolio_deploy-api "$IMAGE_TAG"

@@ -1,7 +1,7 @@
-/* 
+/*
 #[derive(sqlx::FromRow, serde::Serialize)]
-#[serde(rename_all = "camelCase")] 
-pub struct CurrencyRecord {  
+#[serde(rename_all = "camelCase")]
+pub struct CurrencyRecord {
     pub id: i32,
     pub symbol: String,
     pub name: String,
@@ -13,9 +13,9 @@ pub struct CurrencyRecord {
 */
 
 #[derive(sqlx::FromRow, serde::Serialize)]
-#[serde(rename_all = "camelCase")] 
+#[serde(rename_all = "camelCase")]
 pub struct CurrencyOfUserRecord {
-    pub id: i32,    
+    pub id: i32,
     pub user_id: String,
     pub currency_id: i32,
 }
