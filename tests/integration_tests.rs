@@ -7,10 +7,10 @@
 // CONFIGURATION_FILE to a local json file and the container url as the
 // database_connection_string (no container created in that case).
 
+use portfolio_api::repositories::schemas::session_record::SessionWithUser;
 use sqlx::PgPool;
 use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::postgres::Postgres;
-use portfolio_api::repositories::schemas::session_record::SessionWithUser;
 
 /// Spawn a Postgres container and return a ready connection pool.
 async fn postgres_pool() -> PgPool {
@@ -20,13 +20,14 @@ async fn postgres_pool() -> PgPool {
         .with_password("portfolio_password")
         .with_db_name("portfolio");
 
-    let container = pg_image.start().await.expect("Failed to start Postgres container");
+    let container = pg_image
+        .start()
+        .await
+        .expect("Failed to start Postgres container");
     let port = container.get_host_port_ipv4(5432).await.expect("port");
     let host = container.get_host().await.expect("host");
 
-    let url = format!(
-        "postgres://portfolio_user:portfolio_password@{host}:{port}/portfolio"
-    );
+    let url = format!("postgres://portfolio_user:portfolio_password@{host}:{port}/portfolio");
 
     // give Postgres a moment to accept connections
     let pool = PgPool::connect(&url)
@@ -43,7 +44,7 @@ async fn postgres_pool() -> PgPool {
 }
 
 /// Build the application state that each test uses.
-async fn app_state() -> portfolio_api::utils::dependency_injection::AppState {
+async fn app_state() -> portfolio_api::state::AppState {
     let pool = postgres_pool().await;
     portfolio_api::utils::dependency_injection::inject_services(&load_config(), pool).await
 }
@@ -58,7 +59,9 @@ fn load_config() -> portfolio_api::configuration::Configuration {
 }
 
 /// Helper to log in and obtain the session / tokens.
-async fn login(state: &portfolio_api::utils::dependency_injection::AppState) -> portfolio_api::entities::session::Session {
+async fn login(
+    state: &portfolio_api::state::AppState,
+) -> portfolio_api::entities::session::Session {
     use portfolio_api::services::auth_service::LoginRequest;
     let req = LoginRequest {
         username: "testuser".to_string(),
@@ -96,7 +99,10 @@ async fn signup_creates_user_and_returns_session() {
     let state = app_state().await;
 
     // ensure a currency exists for the signup request
-    let currency = state.currency_service.try_get(1).expect("currency 1 missing");
+    let currency = state
+        .currency_service
+        .try_get(1)
+        .expect("currency 1 missing");
 
     use portfolio_api::endpoints::models::auth_models::signup;
     let req = signup::Request {
@@ -107,7 +113,8 @@ async fn signup_creates_user_and_returns_session() {
     let response = portfolio_api::endpoints::auth_endpoint::signup(
         axum::extract::State(state.clone()),
         portfolio_api::endpoints::request_json_validator::ValidJson(req),
-    ).await;
+    )
+    .await;
     let _ = response; // must not panic
 }
 
@@ -131,7 +138,8 @@ async fn refresh_token_returns_new_tokens() {
     let response = portfolio_api::endpoints::auth_endpoint::refresh_token(
         axum::extract::State(state.clone()),
         portfolio_api::endpoints::request_json_validator::ValidJson(req),
-    ).await;
+    )
+    .await;
     let _ = response;
 }
 
@@ -148,22 +156,26 @@ async fn currency_list_all_returns_currencies() {
                 username: "admin".to_string(),
                 access_token_expires_at: portfolio_api::utils::datetime::now(),
                 refresh_token_expires_at: portfolio_api::utils::datetime::now(),
-            }
-            .into(),
+            },
         ),
-    ).await;
+    )
+    .await;
     let _ = response;
 }
 
 #[tokio::test]
 async fn currency_single_returns_one() {
     let state = app_state().await;
-    let currency = state.currency_service.try_get(1).expect("currency 1 missing");
+    let currency = state
+        .currency_service
+        .try_get(1)
+        .expect("currency 1 missing");
 
     let response = portfolio_api::endpoints::currency_endpoint::single(
         axum::extract::State(state.clone()),
         axum::extract::Path(currency.id),
-    ).await;
+    )
+    .await;
     let _ = response;
 }
 
@@ -184,7 +196,8 @@ async fn currency_create_and_delete_cycle() {
     let response = portfolio_api::endpoints::currency_endpoint::create(
         axum::extract::State(state.clone()),
         portfolio_api::endpoints::request_json_validator::ValidJson(create_req),
-    ).await;
+    )
+    .await;
     let _ = response; // must not panic
 
     // cleanup: find and delete the created currency
@@ -193,7 +206,8 @@ async fn currency_create_and_delete_cycle() {
         let _ = portfolio_api::endpoints::currency_endpoint::delete(
             axum::extract::State(state.clone()),
             axum::extract::Path(c.id),
-        ).await;
+        )
+        .await;
     }
 }
 
@@ -204,9 +218,9 @@ async fn custodian_list_returns_custodians() {
     let state = app_state().await;
     let _session = login(&state).await;
 
-    let response = portfolio_api::endpoints::custodian_endpoint::list(
-        axum::extract::State(state.clone()),
-    ).await;
+    let response =
+        portfolio_api::endpoints::custodian_endpoint::list(axum::extract::State(state.clone()))
+            .await;
     let _ = response;
 }
 
@@ -218,8 +232,15 @@ async fn holding_create_and_list_cycle() {
     let session = login(&state).await;
 
     // pick a currency and custodian for the holding
-    let currency = state.currency_service.try_get(1).expect("currency 1 missing");
-    let custodian_list = state.custodian_service.list().await.expect("custodian list failed");
+    let currency = state
+        .currency_service
+        .try_get(1)
+        .expect("currency 1 missing");
+    let custodian_list = state
+        .custodian_service
+        .list()
+        .await
+        .expect("custodian list failed");
     let custodian = custodian_list.first().expect("no custodians found");
 
     use portfolio_api::endpoints::models::holding_models::create;
@@ -241,7 +262,8 @@ async fn holding_create_and_list_cycle() {
             refresh_token_expires_at: session.refresh_token_expires_at,
         }),
         portfolio_api::endpoints::request_json_validator::ValidJson(req),
-    ).await;
+    )
+    .await;
     let _ = response; // must not panic
 }
 
@@ -258,9 +280,12 @@ async fn holding_list_returns_items() {
             access_token_expires_at: session.access_token_expires_at,
             refresh_token_expires_at: session.refresh_token_expires_at,
         }),
-        axum::extract::Query(portfolio_api::endpoints::models::holding_models::search::Params {
-            only_latest_balance: false,
-        }),
-    ).await;
+        axum::extract::Query(
+            portfolio_api::endpoints::models::holding_models::search::Params {
+                only_latest_balance: false,
+            },
+        ),
+    )
+    .await;
     let _ = response;
 }
