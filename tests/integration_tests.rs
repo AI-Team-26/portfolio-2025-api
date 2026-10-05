@@ -55,8 +55,8 @@ async fn app_state() -> portfolio_api::state::AppState {
 fn load_config() -> portfolio_api::configuration::Configuration {
     use std::env;
     // Use the local configuration file from the repo
-    let cfg_path = env::var("CONFIGURATION_FILE")
-        .unwrap_or_else(|_| DEFAULT_CONFIG_PATH.to_string());
+    let cfg_path =
+        env::var("CONFIGURATION_FILE").unwrap_or_else(|_| DEFAULT_CONFIG_PATH.to_string());
     portfolio_api::configuration::Configuration::load_from_json_file(&cfg_path)
         .expect("Failed to load configuration")
 }
