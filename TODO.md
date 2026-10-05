@@ -45,9 +45,6 @@
 
 - Feature 21 [feat/21_security_headers_ratelimit] Harden API security surface: (a) in-app rate limiting with tower-governor GovernorLayer on /auth/* routes (~10 req/min per client, keyed from Cf-Connecting-Ip/XFF first hop per fix/09); (b) security response headers via tower-http SetResponseHeader layer: Content-Security-Policy (tuned to frontend origin), X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer; (c) document that HSTS + edge brute-force rules belong in Cloudflare config (Always Use HTTPS + WAF rate-limit rule on /auth/*) — provide exact CF dashboard steps in devop/README.md rather than code. Verify headers present in curl -I responses end-to-end through nginx.
 
-
-- Feature 23 [DROPPED] ~~A live refresh token is included in error text~~ — resolved by Feature 22 (fixed invalid/expired message without secrets); no remaining action
-
 - Feature 24 | Error contracts are inconsistent — medium/high severity
 
   Repositories return a mixture of `Result<_, String>` and `Result<_, DatabaseError>`. Services similarly mix `String`, `DatabaseError`, and service-specific enums. Endpoint code therefore relies on string formatting in some places and `ErrorKind` checks in others.
