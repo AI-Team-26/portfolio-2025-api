@@ -1,13 +1,14 @@
 use axum::{extract::Path, extract::State, response::IntoResponse, Extension};
 
 use super::response_utils::{
-    response_bad_request, response_created_new_id, response_error, response_not_found, response_ok,
+    response_bad_request, response_created_new_id, response_duplicated_value, response_error,
+    response_not_found, response_ok, response_ok_no_data,
 };
 use crate::endpoints::models::currency_models as models;
 use crate::endpoints::request_json_validator::ValidJson;
+use crate::repositories::errors::ErrorKind;
 use crate::state::AppState;
 
-use crate::endpoints::response_utils::response_ok_no_data;
 use crate::utils::auth_middleware::Session;
 
 pub async fn create(
@@ -17,7 +18,10 @@ pub async fn create(
     match data.into_entity() {
         Ok(entity) => match state.currency_service.create(entity).await {
             Ok(new_id) => response_created_new_id(new_id),
-            Err(e) => response_error(&e),
+            Err(e) => match e.kind {
+                ErrorKind::DuplicatedField => response_duplicated_value("Currency"),
+                _ => response_error(&e.message),
+            },
         },
         Err(e) => response_bad_request(&e),
     }
@@ -30,7 +34,10 @@ pub async fn update(
     match data.into_entity() {
         Ok(entity) => match state.currency_service.update(entity).await {
             Ok(()) => response_ok("Currency updated successfully"),
-            Err(e) => response_error(&e),
+            Err(e) => match e.kind {
+                ErrorKind::RecordNotFound => response_not_found(&e.message),
+                _ => response_error(&e.message),
+            },
         },
         Err(e) => response_bad_request(&e),
     }
@@ -39,7 +46,7 @@ pub async fn update(
 pub async fn delete(State(state): State<AppState>, Path(id): Path<i32>) -> impl IntoResponse {
     match state.currency_service.delete(id).await {
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e),
+        Err(e) => response_error(&e.message),
     }
 }
 
@@ -68,7 +75,7 @@ pub async fn list_of_user(
 ) -> impl IntoResponse {
     match state.currency_service.list_for_user(&session.user_id).await {
         Ok(data) => response_ok(data),
-        Err(err) => response_error(&err),
+        Err(err) => response_error(&err.message),
     }
 }
 
@@ -84,7 +91,7 @@ pub async fn enable(
     {
         // true
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e),
+        Err(e) => response_error(&e.message),
     }
 }
 
@@ -100,6 +107,6 @@ pub async fn disable(
     {
         // false
         Ok(()) => response_ok_no_data(),
-        Err(e) => response_error(&e),
+        Err(e) => response_error(&e.message),
     }
 }

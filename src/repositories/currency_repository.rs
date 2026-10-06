@@ -1,5 +1,6 @@
 use crate::entities::currency::Currency;
 use crate::entities::currency::CurrencyKind;
+use crate::repositories::errors::DatabaseError;
 use sqlx::PgPool;
 
 #[derive(Clone)]
@@ -12,7 +13,7 @@ impl CurrencyRepository {
         Self { db_pool }
     }
 
-    pub async fn create(&self, currency: Currency) -> Result<i32, String> {
+    pub async fn create(&self, currency: Currency) -> Result<i32, DatabaseError> {
         let row = sqlx::query!(
             r#"
                 INSERT INTO Currency (symbol, name, kind, is_active, precision, is_major, coingecko_id)
@@ -29,13 +30,17 @@ impl CurrencyRepository {
         )
         .fetch_one(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| match e {
+            sqlx::Error::Database(db) if db.is_unique_violation() => {
+                DatabaseError::duplicated_field(db.to_string())
+            }
+            other => DatabaseError::generic(other.to_string()),
+        })?;
 
         Ok(row.id)
     }
 
-    pub async fn update(&self, currency: &Currency) -> Result<(), String> {
-        //let _test = sqlx::query!("SELECT COUNT(*) FROM Currency").fetch_one(&self.db_pool).await;
+    pub async fn update(&self, currency: &Currency) -> Result<(), DatabaseError> {
         let result = sqlx::query!(
             r#"
                 UPDATE Currency 
@@ -53,15 +58,15 @@ impl CurrencyRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| DatabaseError::generic(e.to_string()))?;
 
         if result.rows_affected() == 0 {
-            return Err("No currency updated".to_string());
+            return Err(DatabaseError::record_not_found_with_id(currency.id));
         }
         Ok(())
     }
 
-    pub async fn delete(&self, id: i32) -> Result<(), String> {
+    pub async fn delete(&self, id: i32) -> Result<(), DatabaseError> {
         sqlx::query!(
             r#"
                 delete from Currency WHERE id = $1
@@ -70,13 +75,13 @@ impl CurrencyRepository {
         )
         .execute(&self.db_pool)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| DatabaseError::generic(e.to_string()))?;
 
         // no need to check rows affected because if 0 it was not found because already deleted
         Ok(())
     }
 
-    pub async fn list(&self) -> Result<Vec<Currency>, String> {
+    pub async fn list(&self) -> Result<Vec<Currency>, DatabaseError> {
         let currencies = sqlx::query_as!(Currency,
             r#"
             SELECT id, symbol, name, kind as "kind!: CurrencyKind", is_active, precision, is_major, coingecko_id
@@ -84,7 +89,7 @@ impl CurrencyRepository {
             "#)
             .fetch_all(&self.db_pool)
             .await
-            .map_err(|e:sqlx::Error| e.to_string())?;
+            .map_err(|e| DatabaseError::generic(e.to_string()))?;
 
         Ok(currencies)
     }
