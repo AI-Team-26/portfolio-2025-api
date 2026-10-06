@@ -97,7 +97,6 @@ impl AuthService {
     ) -> Result<SessionWithUser, AuthError> {
         let now = datetime::now();
 
-        // Fixed message: never include tokens or expiry values in errors/logs
         let data_for_expired_token = "access token is invalid or expired".to_string();
 
         match self
