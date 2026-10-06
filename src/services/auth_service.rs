@@ -118,8 +118,9 @@ impl AuthService {
     pub async fn refresh_session(&self, refresh_token: String) -> Result<SessionRecord, AuthError> {
         let now = datetime::now();
 
-        // Single query: update doubles as lookup; None means unknown/expired token.
-        // Fixed message: never include the raw token in errors/logs.
+        // The UPDATE below also serves as the token lookup:
+        // Err => database failure (mapped to AuthError::DatabaseError),
+        // Ok(None) => no matching/unexpired session => invalid or expired token.
         match self
             .session_repository
             .update_for_refresh(UpdateForRefresh {
