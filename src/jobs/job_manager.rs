@@ -4,7 +4,7 @@ use crate::{
 };
 use tokio_cron_scheduler::{Job, JobScheduler};
 
-pub async fn schedule_jobs(config: &Configuration, app_state: AppState) {
+pub async fn schedule_jobs(config: &Configuration, app_state: AppState) -> JobScheduler {
     let scheduler = JobScheduler::new().await.unwrap();
 
     // Update Exchange Rate
@@ -33,10 +33,7 @@ pub async fn schedule_jobs(config: &Configuration, app_state: AppState) {
         &config.jobs.update_exchange_rate_cron
     );
 
-    // Spawn the service in the background instead of awaiting it
-    /*tokio::spawn(async move {
-        service.await;
-    });*/
+    scheduler
 }
 
 pub trait RecurringJob: Send + Sync {
