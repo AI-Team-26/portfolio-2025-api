@@ -1,7 +1,5 @@
 # TODO
 
-- Feature 5 [SUSPENDED]  [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,  `CreateError`) to enums using `#[derive(thiserror::Error)]` with `#[from]` conversions; remove dead manual constructors and `.map_err()` boilerplate at call sites. Do this where it makes sense, is a simple string does the job... keep it. KISS.
-
 - Feature 9 [fix/09_session_client_metadata] Populate real client metadata at login (auth_endpoint.rs currently stores empty strings): read IP from X-Forwarded-For first hop (trusted-proxy chain:
  Cloudflare → nginx; consider Cf-Connecting-Ip as primary since Cloudflare sets it authoritatively) and User-Agent from headers into LoginRequest; validate non-empty before persisting to Sessions
 
