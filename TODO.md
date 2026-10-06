@@ -1,8 +1,5 @@
 # TODO
 
-- Feature 9 [fix/09_session_client_metadata] Populate real client metadata at login (auth_endpoint.rs currently stores empty strings): read IP from X-Forwarded-For first hop (trusted-proxy chain:
- Cloudflare → nginx; consider Cf-Connecting-Ip as primary since Cloudflare sets it authoritatively) and User-Agent from headers into LoginRequest; validate non-empty before persisting to Sessions
-
 - Feature 11 [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
  (http_requests_total{method,route,status}, http_request_duration_seconds), in-flight requests gauge, and sqlx pool gauges (size, idle, waiting_tasks) polled from PgPoolMetrics — enables measuring pool
  saturation to inform refactor/08_db_pool_tuning values. Route must be excluded from auth middleware; restrict access at nginx level (allow internal network/scrapers only, deny public) since metric labels can
@@ -27,8 +24,6 @@
  DatabaseError variants. Every public service method gets happy-path + primary failure-mode coverage via cargo test, zero external deps. Composes with refactor/05_thiserror_errors (do that first if possible
  for clean typed assertions).
 
-- Feature 15 [perf/15_single_refresh_lookup] Collapse double DB query in AuthService.refresh_session(): remove pre-check via SessionRepository.exists_by_refresh_token and rely solely on find_by_refresh_token (None → InvalidOrExpiredToken); delete exists_by_refresh_token method if unused elsewhere. In the same pass, scrub the raw refresh token from error/log strings ("NOT FOUND - 111 | refresh_token: {}" currently embeds the live token — security leak flagged in Analysis.md); use fixed messages without secrets. Verify no behavior change for valid/expired tokens; covered by existing integration tests + new unit test once Epic 13 trait seams land.
-
 - Feature 16 [perf/16_batch_insert_currency_rates] Fix N+1 in src/jobs/update_currency_rates_job.rs: job currently loops `for rate in rates { currency_rate_service.create(&rate) }` issuing one INSERT per coin per run. Add bulk upsert path: CurrencyRateService::create_many → CurrencyRateRepository batch insert using single `INSERT ... ON CONFLICT DO NOTHING` (or sqlx query builder batching); aggregate failures instead of per-item logging (log count + symbols failed); verify idempotency since job runs periodically; measure before/after job duration and round-trips.
 
 - Feature 17 [refactor/17_token_lifetimes_config] Make hardcoded token lifetimes configurable: move ACCESS_TOKEN_LIFETIME (30 min) and REFRESH_TOKEN_LIFETIME (30 days) out of src/constants.rs into Configuration fields (e.g. auth_access_token_lifetime_secs default 1800, auth_refresh_token_lifetime_secs default 2592000); constants become fallback defaults only; wire through AuthService/session creation where they're consumed. Composes with refactor/07_config_crate — implement there if that lands first, otherwise extend current JSON loading. Document trade-off: longer refresh = fewer logins vs larger revocation window.
@@ -36,8 +31,6 @@
 - Feature 18 [feat/18_request_timeout_middleware] Add HTTP request timeout protection: wrap router with tower `TimeoutLayer` (tower::timeout) returning 504 Gateway Timeout when a handler exceeds budget (start 30s global; allow per-route override later if needed). Note complementarity with db acquire_timeout (refactor/08): pool wait is bounded separately so slow handlers fail fast rather than hang connections. Ensure background jobs are unaffected (they don't go through the HTTP layer).
 
 - Feature 19 [feat/19_graceful_shutdown] Implement graceful shutdown in main.rs: axum `serve(...).with_graceful_shutdown(signal)` on SIGINT/SIGTERM via tokio::signal; sequence: stop accepting new connections → drain in-flight requests with bounded wait (~10-30s then force exit) → cancel scheduled cron jobs via job_manager handle → close PgPool cleanly (pool.close()) → log each phase. Critical for Docker deploys where orchestrator sends SIGTERM to old container during rollout.
-
-- Feature 20 [chore/20_modernize_deps] Drop two obsolete dependencies using std/stable replacements: (a) once_cell → std::sync::LazyLock in src/services/Coingecko/currencies_map.rs (Lazy→LazyLock drop-in rename), remove once_cell from Cargo.toml; (b) async-trait → native async fn in traits (stable since Rust 1.75): remove #[async_trait] attributes and imports in src/jobs/job_manager.rs and src/jobs/update_currency_rates_job.rs, update the outdated "not yet natively supported" comment; watch for dyn-dispatch seams that may need explicit future boxing. Behavior-preserving; cargo build + clippy + tests green before merge.
 
 - Feature 21 [feat/21_security_headers_ratelimit] Harden API security surface: (a) in-app rate limiting with tower-governor GovernorLayer on /auth/* routes (~10 req/min per client, keyed from Cf-Connecting-Ip/XFF first hop per fix/09); (b) security response headers via tower-http SetResponseHeader layer: Content-Security-Policy (tuned to frontend origin), X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer; (c) document that HSTS + edge brute-force rules belong in Cloudflare config (Always Use HTTPS + WAF rate-limit rule on /auth/*) — provide exact CF dashboard steps in devop/README.md rather than code. Verify headers present in curl -I responses end-to-end through nginx.
 
@@ -66,6 +59,9 @@
 
 ## Done
 
+- Feature 9 | Real client metadata at login: IP from Cf-Connecting-Ip / X-Forwarded-For first hop + User-Agent persisted to Sessions (PR #29)
+- Feature 15 | Single-query session refresh: `refresh_session()` relies solely on bound-token lookup (pre-check removed), raw tokens scrubbed from errors/logs (PR #30)
+- Feature 20 | Modernized deps: once_cell → std::sync::LazyLock, async-trait → native async fn in traits (PR #28)
 - Feature 10 | `GET /health` two-tier health endpoint: liveness (always 200 while process is up) + readiness (`?ready=true` runs `SELECT 1` on PgPool with ~2s timeout → 503 if DB unreachable); registered as public/unauthenticated route; Dockerfile installs curl and adds `HEALTHCHECK`; proxy/cache-bypass notes in devop/README.md
 - Feature 22 | Refresh-token lookup correctness: single bound-token lookup with propagated DB errors (`AuthError::DatabaseError`) replacing `.ok().flatten()`; pre-check query removed (`exists_by_refresh_token` deleted); fixed invalid/expired message without secrets. Path tests pending Epic 13 trait seams / testcontainers infra
 - Feature 8 | Explicit database pool tuning (`PgPoolOptions`: max/min connections + acquire timeout in Configuration)
