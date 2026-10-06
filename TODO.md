@@ -1,9 +1,6 @@
 # TODO
 
-- Feature 5 [SUSPENDED]  [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,
- `CreateError`) to enums using `#[derive(thiserror::Error)]` with `#[from]` conversions; remove dead manual constructors and `.map_err()` boilerplate at call sites
-
-- Feature 7 [DROPPED] [refactor/07_config_crate] ~~Replace hand-rolled JSON loading with the `config` crate~~ — rejected after trial (PR #23, closed): env layer + serde defaults add complexity and risk silent misconfiguration in production; single required JSON file with fail-fast loading is kept
+- Feature 5 [SUSPENDED]  [refactor/05_thiserror_errors] Replace manual error types with `thiserror` derives: convert `DatabaseError`/`ErrorKind` (repositories/errors.rs) and service errors (`AuthError`, `LoginError`,  `CreateError`) to enums using `#[derive(thiserror::Error)]` with `#[from]` conversions; remove dead manual constructors and `.map_err()` boilerplate at call sites. Do this where it makes sense, is a simple string does the job... keep it. KISS.
 
 - Feature 9 [fix/09_session_client_metadata] Populate real client metadata at login (auth_endpoint.rs currently stores empty strings): read IP from X-Forwarded-For first hop (trusted-proxy chain:
  Cloudflare → nginx; consider Cf-Connecting-Ip as primary since Cloudflare sets it authoritatively) and User-Agent from headers into LoginRequest; validate non-empty before persisting to Sessions
@@ -27,8 +24,7 @@
  mockall = "0.13". Behavior-preserving; decide async-fn-in-trait approach (async-trait vs boxed futures). Validates pattern before rollout.
   - Feature 13.2 [test/13_2_auth_login_tests] Unit tests for AuthService.login() using MockUserRepository: happy path, wrong password → FailedLogin, unknown user → FailedLogin, database error propagation.
  Offline (no Postgres), plain cargo test. Prerequisite: 13.1 merged.
-  - Feature 13.3 [refactor/13_3_remaining_traits] Roll out validated pattern to remaining repositories (session, currency, custodian, holding, currency_of_user): extract traits, *Impl renames, Arc<dyn
- Trait> injection, DI updates. Max 2-3 repos per PR. No new tests here.
+  - Feature 13.3 [refactor/13_3_remaining_traits] Roll out validated pattern to remaining repositories (session, currency, custodian, holding, currency_of_user): extract traits, *Impl renames, Arc<dyn Trait> injection, DI updates. Max 2-3 repos per PR. No new tests here.
   - Feature 13.4 [test/13_4_service_coverage] Extend suites to remaining flows: AuthService (signup duplicate, refresh rotation/expiry), SessionService (create/expire/purge), Currency/Custodian CRUD incl.
  DatabaseError variants. Every public service method gets happy-path + primary failure-mode coverage via cargo test, zero external deps. Composes with refactor/05_thiserror_errors (do that first if possible
  for clean typed assertions).
