@@ -150,9 +150,9 @@ pub async fn refresh_token(
         .await
     {
         Ok(session) => response_ok(refresh_token::Response::from(session)),
-        Err(AuthError::InvalidOrExpiredToken(data)) => response_invalid_token(
-            format!("Refresh token is invalid or expired. {}", data).as_str(),
-        ),
+        Err(AuthError::InvalidOrExpiredToken) => {
+            response_invalid_token("Refresh token is invalid or expired")
+        }
         Err(AuthError::DatabaseError(e)) => response_error(&e),
     }
 }

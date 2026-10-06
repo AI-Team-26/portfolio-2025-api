@@ -31,7 +31,7 @@ pub enum LoginError {
 #[derive(Debug)]
 pub enum AuthError {
     DatabaseError(String),
-    InvalidOrExpiredToken(String),
+    InvalidOrExpiredToken,
 }
 
 impl AuthService {
@@ -97,8 +97,6 @@ impl AuthService {
     ) -> Result<SessionWithUser, AuthError> {
         let now = datetime::now();
 
-        let data_for_expired_token = "access token is invalid or expired".to_string();
-
         match self
             .session_repository
             .update_for_access(UpdateForAccess {
@@ -111,7 +109,7 @@ impl AuthService {
             .map_err(AuthError::DatabaseError)?
         {
             Some(record) => Ok(record),
-            None => Err(AuthError::InvalidOrExpiredToken(data_for_expired_token)), // session not found
+            None => Err(AuthError::InvalidOrExpiredToken), // session not found
         }
     }
 
@@ -135,9 +133,7 @@ impl AuthService {
             .map_err(AuthError::DatabaseError)?
         {
             Some(record) => Ok(record),
-            None => Err(AuthError::InvalidOrExpiredToken(
-                "invalid or expired refresh token".to_string(),
-            )),
+            None => Err(AuthError::InvalidOrExpiredToken),
         }
     }
 }
