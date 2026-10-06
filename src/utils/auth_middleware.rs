@@ -42,8 +42,8 @@ pub async fn requires_user(
 
             next.run(req).await.into_response()
         }
-        Err(AuthError::InvalidOrExpiredToken(info)) => {
-            response_invalid_token(format!("Access Token is invalid or expired. {}", info).as_str())
+        Err(AuthError::InvalidOrExpiredToken) => {
+            response_invalid_token("Access Token is invalid or expired")
         }
         Err(AuthError::DatabaseError(e)) => {
             // TODO: log
