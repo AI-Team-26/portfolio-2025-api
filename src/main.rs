@@ -1,8 +1,10 @@
 use crate::{
     configuration::Configuration,
+    constants::DRAIN_TIMEOUT,
     utils::{cors::RouterExtensions as _, dependency_injection},
 };
 use sqlx::postgres::PgPoolOptions;
+use std::future::IntoFuture;
 use std::time::Duration;
 use tokio::net::TcpListener;
 
@@ -70,11 +72,11 @@ async fn main() {
     let app_state = dependency_injection::inject_services(&config, db_pool).await;
 
     info!("setup jobs...");
-    jobs::job_manager::schedule_jobs(&config, app_state.clone()).await;
+    let mut scheduler = jobs::job_manager::schedule_jobs(&config, app_state.clone()).await;
     info!("... done");
 
     let app = utils::routing::set_routes(app_state.clone())
-        .with_state(app_state)
+        .with_state(app_state.clone())
         .set_cors(&config.app_domain);
 
     // Bind on server (Azure or Docker container) requires 0.0.0.0
@@ -94,7 +96,56 @@ async fn main() {
             .replace("0.0.0.0", "127.0.0.1")
     );
 
-    axum::serve(listener, app)
-        .await
-        .expect("Failed to start server");
+    // Watchdog mirroring the OS signals so the post-signal drain can be bounded:
+    // without it the timeout would start at boot instead of at the signal.
+    let (drain_started_tx, drain_started_rx) = tokio::sync::oneshot::channel::<()>();
+    tokio::spawn(async move {
+        shutdown_signal().await;
+        let _ = drain_started_tx.send(());
+    });
+
+    let mut server = Box::pin(
+        axum::serve(listener, app)
+            .with_graceful_shutdown(shutdown_signal())
+            .into_future(),
+    );
+
+    if drain_started_rx.await.is_ok() {
+        match tokio::time::timeout(DRAIN_TIMEOUT, &mut server).await {
+            Ok(Ok(())) => info!("In-flight requests drained."),
+            Ok(Err(e)) => error!("Server error during shutdown: {}", e),
+            Err(_) => warn!(
+                "Drain timed out after {}s — forcing shutdown",
+                DRAIN_TIMEOUT.as_secs()
+            ),
+        }
+    }
+
+    info!("Cancelling scheduled jobs...");
+    if let Err(e) = scheduler.shutdown().await {
+        warn!("Failed to shut down job scheduler: {}", e);
+    }
+
+    info!("Closing database pool...");
+    app_state.db_pool.close().await;
+    info!("Shutdown complete.");
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl+C handler");
+    };
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("Failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    tokio::select! {
+        _ = ctrl_c => info!("SIGINT received"),
+        _ = terminate => info!("SIGTERM received"),
+    }
 }

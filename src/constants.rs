@@ -1,3 +1,8 @@
+use std::time::Duration;
+
+// Bounded wait for in-flight requests to drain during graceful shutdown.
+pub const DRAIN_TIMEOUT: Duration = Duration::from_secs(30);
+
 pub mod auth {
     use std::time::Duration;
 
