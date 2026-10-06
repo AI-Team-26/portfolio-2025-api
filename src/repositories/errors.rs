@@ -1,4 +1,4 @@
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 #[allow(dead_code)]
 pub enum ErrorKind {
     DuplicatedField,
@@ -6,10 +6,17 @@ pub enum ErrorKind {
     Generic,
 }
 
+#[derive(Debug)]
 #[allow(dead_code)]
 pub struct DatabaseError {
     pub message: String,
     pub kind: ErrorKind,
+}
+
+impl std::fmt::Display for DatabaseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
 }
 
 #[allow(dead_code)]

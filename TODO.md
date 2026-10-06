@@ -41,20 +41,10 @@
 
 - Feature 21 [feat/21_security_headers_ratelimit] Harden API security surface: (a) in-app rate limiting with tower-governor GovernorLayer on /auth/* routes (~10 req/min per client, keyed from Cf-Connecting-Ip/XFF first hop per fix/09); (b) security response headers via tower-http SetResponseHeader layer: Content-Security-Policy (tuned to frontend origin), X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer; (c) document that HSTS + edge brute-force rules belong in Cloudflare config (Always Use HTTPS + WAF rate-limit rule on /auth/*) — provide exact CF dashboard steps in devop/README.md rather than code. Verify headers present in curl -I responses end-to-end through nginx.
 
-- Feature 24 | Error contracts are inconsistent — medium/high severity
-
-  Repositories return a mixture of `Result<_, String>` and `Result<_, DatabaseError>`. Services similarly mix `String`, `DatabaseError`, and service-specific enums. Endpoint code therefore relies on string formatting in some places and `ErrorKind` checks in others.
-
-  Examples include:
-
-  - `CurrencyRepository`, `UserRepository`, `SessionRepository`, and several others returning `String`;
-  - `CustodianRepository` and `HoldingRepository` using `DatabaseError` for only some methods;
-  - `CustodianService::create` flattening a structured database error to `Unexpected(String)`;
-  - endpoints mapping errors based on `kind`, while other endpoint paths expose stringified errors.
-
-  This makes it easy to accidentally turn a not-found or duplicate condition into a 500 response and makes error handling hard to test.
-
-  **Recommendation:** define the error contract at each boundary first, then migrate one vertical slice at a time. Preserve context with `#[source]`/transparent variants or explicit context messages rather than flattening everything.
+- Feature 24 | Error contracts are inconsistent — medium/high severity (split into subtasks)
+  - Feature 24a [refactor/24_1_currency_error_contract] Foundation + Currency vertical slice: add Display/Debug to DatabaseError; migrate CurrencyRepository + CurrencyOfUserRepository from String → DatabaseError; update CurrencyService signatures; currency_endpoint maps ErrorKind to status codes
+  - Feature 24b [refactor/24_2_custodian_holding_errors] Migrate remaining CustodianRepository (single/list) and HoldingRepository (create/single_for_user/list_last_balance/list) from String → DatabaseError; update services + endpoints to use kind-based matching
+  - Feature 24c [refactor/24_3_session_user_rate_errors] Migrate SessionRepository, UserRepository, CurrencyRateRepository from String → DatabaseError; update their services and endpoints
 
 - Feature 25 | Duplicate-user checking is race-prone — medium severity
 
