@@ -33,8 +33,6 @@
  DatabaseError variants. Every public service method gets happy-path + primary failure-mode coverage via cargo test, zero external deps. Composes with refactor/05_thiserror_errors (do that first if possible
  for clean typed assertions).
 
-- Feature 15 [perf/15_single_refresh_lookup] Collapse double DB query in AuthService.refresh_session(): remove pre-check via SessionRepository.exists_by_refresh_token and rely solely on find_by_refresh_token (None → InvalidOrExpiredToken); delete exists_by_refresh_token method if unused elsewhere. In the same pass, scrub the raw refresh token from error/log strings ("NOT FOUND - 111 | refresh_token: {}" currently embeds the live token — security leak flagged in Analysis.md); use fixed messages without secrets. Verify no behavior change for valid/expired tokens; covered by existing integration tests + new unit test once Epic 13 trait seams land.
-
 - Feature 16 [perf/16_batch_insert_currency_rates] Fix N+1 in src/jobs/update_currency_rates_job.rs: job currently loops `for rate in rates { currency_rate_service.create(&rate) }` issuing one INSERT per coin per run. Add bulk upsert path: CurrencyRateService::create_many → CurrencyRateRepository batch insert using single `INSERT ... ON CONFLICT DO NOTHING` (or sqlx query builder batching); aggregate failures instead of per-item logging (log count + symbols failed); verify idempotency since job runs periodically; measure before/after job duration and round-trips.
 
 - Feature 17 [refactor/17_token_lifetimes_config] Make hardcoded token lifetimes configurable: move ACCESS_TOKEN_LIFETIME (30 min) and REFRESH_TOKEN_LIFETIME (30 days) out of src/constants.rs into Configuration fields (e.g. auth_access_token_lifetime_secs default 1800, auth_refresh_token_lifetime_secs default 2592000); constants become fallback defaults only; wire through AuthService/session creation where they're consumed. Composes with refactor/07_config_crate — implement there if that lands first, otherwise extend current JSON loading. Document trade-off: longer refresh = fewer logins vs larger revocation window.
@@ -82,6 +80,7 @@
 
 ## Done
 
+- Feature 15 | Single-query session refresh: `refresh_session()` now relies solely on `update_for_refresh` (pre-check removed), dead `SessionRepository::find_by_refresh_token` deleted, raw access token scrubbed from `validate_access` error string (fixed message, no secrets)
 - Feature 10 | `GET /health` two-tier health endpoint: liveness (always 200 while process is up) + readiness (`?ready=true` runs `SELECT 1` on PgPool with ~2s timeout → 503 if DB unreachable); registered as public/unauthenticated route; Dockerfile installs curl and adds `HEALTHCHECK`; proxy/cache-bypass notes in devop/README.md
 - Feature 22 | Refresh-token lookup correctness: single bound-token lookup with propagated DB errors (`AuthError::DatabaseError`) replacing `.ok().flatten()`; pre-check query removed (`exists_by_refresh_token` deleted); fixed invalid/expired message without secrets. Path tests pending Epic 13 trait seams / testcontainers infra
 - Feature 8 | Explicit database pool tuning (`PgPoolOptions`: max/min connections + acquire timeout in Configuration)

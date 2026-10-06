@@ -98,35 +98,4 @@ impl SessionRepository {
         .await
         .map_err(|e| e.to_string())
     }
-    /*
-    pub async fn find_by_access_token(&self, access_token: &str) -> Result<Option<SessionRecord>, String> {
-        //let _ = sqlx::query_as!(SessionRecord, "SELECT id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at  FROM Sessions");
-        sqlx::query_as!(
-            SessionRecord,
-            r#"
-            SELECT id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, creation_ip_address, creation_user_agent
-            FROM Sessions WHERE access_token = $1
-            "#,
-            access_token)
-                .fetch_optional(&self.db_pool)
-                .await
-                .map_err(|e| format!("Failed to get Session by access token. {}", e))
-    }
-    */
-
-    pub async fn find_by_refresh_token(
-        &self,
-        refresh_token: &str,
-    ) -> Result<Option<SessionRecord>, String> {
-        sqlx::query_as!(
-            SessionRecord,
-            r#"
-            SELECT id, user_id, access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, created_at, last_access_at, last_refresh_at, creation_ip_address, creation_user_agent
-            FROM Sessions WHERE TRIM(refresh_token) = TRIM($1)
-            "#,
-            refresh_token)
-                .fetch_optional(&self.db_pool)
-                .await
-                .map_err(|e| format!("Failed to get Session by refresh token. {}", e))
-    }
 }

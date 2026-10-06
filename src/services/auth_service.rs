@@ -97,18 +97,8 @@ impl AuthService {
     ) -> Result<SessionWithUser, AuthError> {
         let now = datetime::now();
 
-        let data_for_expired_token = format!(
-            "update_for_access: 
-        access_token: {},
-        now: {},
-        access_token_expires_at: {},
-        refresh_token_expires_at: {},
-        ",
-            access_token,
-            now,
-            now + constants::auth::ACCESS_TOKEN_LIFETIME,
-            now + constants::auth::REFRESH_TOKEN_LIFETIME
-        );
+        // Fixed message: never include tokens or expiry values in errors/logs
+        let data_for_expired_token = "access token is invalid or expired".to_string();
 
         match self
             .session_repository
@@ -129,18 +119,8 @@ impl AuthService {
     pub async fn refresh_session(&self, refresh_token: String) -> Result<SessionRecord, AuthError> {
         let now = datetime::now();
 
-        if !self
-            .session_repository
-            .find_by_refresh_token(&refresh_token)
-            .await
-            .map_err(AuthError::DatabaseError)?
-            .is_some()
-        {
-            return Err(AuthError::InvalidOrExpiredToken(
-                "invalid or expired refresh token".to_string(),
-            ));
-        }
-
+        // Single query: update doubles as lookup; None means unknown/expired token.
+        // Fixed message: never include the raw token in errors/logs.
         match self
             .session_repository
             .update_for_refresh(UpdateForRefresh {
