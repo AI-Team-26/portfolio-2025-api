@@ -299,7 +299,8 @@ async fn holding_list_returns_items() {
 async fn metrics_endpoint_is_public_and_reports_expected_metrics() {
     let state = app_state().await;
     let metrics = portfolio_api::utils::metrics::init_metrics(state.db_pool.clone());
-    let app = portfolio_api::utils::routing::set_routes(state.clone(), &metrics);
+    let app = portfolio_api::utils::routing::set_routes(state.clone(), &metrics)
+        .with_state(state);
 
     let request = http::Request::builder()
         .uri("/metrics")
