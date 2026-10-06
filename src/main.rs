@@ -67,13 +67,16 @@ async fn main() {
         info!("Database migrations are disabled in configuration.");
     }
 
+    // Prometheus metrics (http_* + sqlx pool gauges); see /metrics route.
+    let prometheus_metrics = utils::metrics::init_metrics(db_pool.clone());
+
     let app_state = dependency_injection::inject_services(&config, db_pool).await;
 
     info!("setup jobs...");
     jobs::job_manager::schedule_jobs(&config, app_state.clone()).await;
     info!("... done");
 
-    let app = utils::routing::set_routes(app_state.clone())
+    let app = utils::routing::set_routes(app_state.clone(), &prometheus_metrics)
         .with_state(app_state)
         .set_cors(&config.app_domain);
 

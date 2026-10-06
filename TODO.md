@@ -1,10 +1,5 @@
 # TODO
 
-- Feature 11 [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
- (http_requests_total{method,route,status}, http_request_duration_seconds), in-flight requests gauge, and sqlx pool gauges (size, idle, waiting_tasks) polled from PgPoolMetrics — enables measuring pool
- saturation to inform refactor/08_db_pool_tuning values. Route must be excluded from auth middleware; restrict access at nginx level (allow internal network/scrapers only, deny public) since metric labels can
- leak info. Add scrape interval guidance (15-30s) and note that /metrics responses must not be cached by Cloudflare.
-
 - Feature 12 [feat/12_opentelemetry_tracing] Integrate distributed tracing: add opentelemetry, opentelemetry_sdk, opentelemetry-otlp, tracing-opentelemetry deps. Create TracerProvider with OTLP exporter
  (endpoint configurable via config layer, e.g. OTEL_EXPORTER_OTLP_ENDPOINT env var); wrap tokio runtime with tracer subscriber so existing tracing spans propagate W3C traceparent headers on outbound HTTP
  calls (Coingecko API client) and inject TraceId into the existing JSON logging format (tracing-subscriber json writer customizer or field injection) so every log line carries the trace ID even without a
@@ -72,6 +67,7 @@
 - Feature 9 | Real client metadata at login: IP from Cf-Connecting-Ip / X-Forwarded-For first hop + User-Agent persisted to Sessions (PR #29)
 - Feature 15 | Single-query session refresh: `refresh_session()` relies solely on bound-token lookup (pre-check removed), raw tokens scrubbed from errors/logs (PR #30)
 - Feature 20 | Modernized deps: once_cell → std::sync::LazyLock, async-trait → native async fn in traits (PR #28)
+- Feature 11 | `GET /metrics` Prometheus endpoint via axum-prometheus: http_requests_total{method,route,status}, http_request_duration_seconds, in_flight_requests + live sqlx pool gauges (db_pool_size/idle/waiting_tasks); public route restricted at nginx (internal-only), no-cache notes for nginx/Cloudflare, devop docs
 - Feature 10 | `GET /health` two-tier health endpoint: liveness (always 200 while process is up) + readiness (`?ready=true` runs `SELECT 1` on PgPool with ~2s timeout → 503 if DB unreachable); registered as public/unauthenticated route; Dockerfile installs curl and adds `HEALTHCHECK`; proxy/cache-bypass notes in devop/README.md
 - Feature 22 | Refresh-token lookup correctness: single bound-token lookup with propagated DB errors (`AuthError::DatabaseError`) replacing `.ok().flatten()`; pre-check query removed (`exists_by_refresh_token` deleted); fixed invalid/expired message without secrets. Path tests pending Epic 13 trait seams / testcontainers infra
 - Feature 8 | Explicit database pool tuning (`PgPoolOptions`: max/min connections + acquire timeout in Configuration)

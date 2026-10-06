@@ -3,6 +3,7 @@ pub mod datetime;
 pub mod dependency_injection;
 pub mod helpers;
 pub mod logging;
+pub mod metrics;
 pub mod routing;
 pub mod token;
 
