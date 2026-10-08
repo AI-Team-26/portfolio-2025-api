@@ -56,7 +56,7 @@
 
 - Feature 29 [refactor/29_db_pool_from_state] Now that `AppState` exposes `db_pool` (feat/10_health_endpoint), update endpoint dependency injection where direct database access is needed: source the pool from `AppState` instead of wiring additional repository/service dependencies through constructors and `inject_services`
 
-- Feature 31 [feat/31_metrics] Add GET /netrics exposing some metrics info: HTTP request total, HTTP Request duration P99
+- Feature 31 [replace feature 11] [feat/31_metrics] Add GET /netrics exposing some metrics info: HTTP request total, HTTP Request duration P99
   If easy expose it in Prometheus-format.
 
 - Feature 11 [SUSPENDED: too big and unnecessary] [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
