@@ -134,10 +134,17 @@ async fn bulk_upsert_roundtrip_comparison() {
     let bulk = t1.elapsed();
     assert_eq!(affected, batch.len());
 
-    println!(
+    eprintln!(
         "round-trip comparison over {} rows: per-row inserts {:?}, single bulk upsert {:?}",
         batch.len(),
         per_row,
         bulk
+    );
+    // one round-trip must beat N sequential ones; guards against regressing to per-row inserts
+    assert!(
+        bulk < per_row,
+        "bulk upsert ({:?}) should be faster than per-row inserts ({:?})",
+        bulk,
+        per_row
     );
 }
