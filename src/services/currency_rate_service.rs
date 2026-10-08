@@ -46,8 +46,9 @@ impl CurrencyRateService {
         Ok(self.latest_rates.read().await.clone())
     }
 
-    pub async fn create(&self, record: &CurrencyRateRecord) -> Result<(), String> {
-        self.repository.create(record).await
+    /// Bulk upsert; returns the number of rows inserted/updated.
+    pub async fn create_many(&self, records: &[CurrencyRateRecord]) -> Result<usize, String> {
+        self.repository.create_many(records).await
     }
 
     pub async fn search(

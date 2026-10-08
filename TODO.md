@@ -13,8 +13,6 @@
  DatabaseError variants. Every public service method gets happy-path + primary failure-mode coverage via cargo test, zero external deps. Composes with refactor/05_thiserror_errors (do that first if possible
  for clean typed assertions).
 
-- Feature 16 [perf/16_batch_insert_currency_rates] Fix N+1 in src/jobs/update_currency_rates_job.rs: job currently loops `for rate in rates { currency_rate_service.create(&rate) }` issuing one INSERT per coin per run. Add bulk upsert path: CurrencyRateService::create_many → CurrencyRateRepository batch insert using single `INSERT ... ON CONFLICT DO NOTHING` (or sqlx query builder batching); aggregate failures instead of per-item logging (log count + symbols failed); verify idempotency since job runs periodically; measure before/after job duration and round-trips.
-
 - Feature 17 [refactor/17_token_lifetimes_config] Make hardcoded token lifetimes configurable: move ACCESS_TOKEN_LIFETIME (30 min) and REFRESH_TOKEN_LIFETIME (30 days) out of src/constants.rs into Configuration fields (e.g. auth_access_token_lifetime_secs default 1800, auth_refresh_token_lifetime_secs default 2592000); constants become fallback defaults only; wire through AuthService/session creation where they're consumed. Composes with refactor/07_config_crate — implement there if that lands first, otherwise extend current JSON loading. Document trade-off: longer refresh = fewer logins vs larger revocation window.
 
 - Feature 18 [feat/18_request_timeout_middleware] Add HTTP request timeout protection: wrap router with tower `TimeoutLayer` (tower::timeout) returning 504 Gateway Timeout when a handler exceeds budget (start 30s global; allow per-route override later if needed). Note complementarity with db acquire_timeout (refactor/08): pool wait is bounded separately so slow handlers fail fast rather than hang connections. Ensure background jobs are unaffected (they don't go through the HTTP layer).
@@ -72,6 +70,7 @@
 
 ## Done
 
+- Feature 16 | Bulk currency-rate upsert: single multi-row `INSERT ... ON CONFLICT DO UPDATE` via QueryBuilder replaces per-coin INSERT loop (N+1 → 1 round-trip); aggregate failure logging + elapsed-time measurement; idempotency & timing integration tests (PR #36)
 - Feature 9 | Real client metadata at login: IP from Cf-Connecting-Ip / X-Forwarded-For first hop + User-Agent persisted to Sessions (PR #29)
 - Feature 15 | Single-query session refresh: `refresh_session()` relies solely on bound-token lookup (pre-check removed), raw tokens scrubbed from errors/logs (PR #30)
 - Feature 20 | Modernized deps: once_cell → std::sync::LazyLock, async-trait → native async fn in traits (PR #28)

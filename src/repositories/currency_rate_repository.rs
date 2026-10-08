@@ -2,7 +2,7 @@ use crate::{
     repositories::{helpers::from_rust_decimal, schemas::currency_rate_record::CurrencyRateRecord},
     utils::datetime::Date,
 };
-use sqlx::PgPool;
+use sqlx::{types::BigDecimal, PgPool, Postgres, QueryBuilder};
 
 #[derive(Clone)]
 pub struct CurrencyRateRepository {
@@ -14,27 +14,44 @@ impl CurrencyRateRepository {
         Self { db_pool }
     }
 
-    pub async fn create(&self, record: &CurrencyRateRecord) -> Result<(), String> {
-        sqlx::query!(
-            // Postgres UPSERT
-            r#"
-                INSERT INTO CurrencyRates (base_currency_id, quote_currency_id, date, source, rate)
-                VALUES ($1, $2, $3, $4, $5)
-                ON CONFLICT (base_currency_id, quote_currency_id, date, source) DO UPDATE SET
-                    rate = EXCLUDED.rate,
-                    created_at = CURRENT_TIMESTAMP
-            "#,
-            record.base_currency_id,
-            record.quote_currency_id,
-            record.date,
-            record.source,
-            from_rust_decimal(record.rate)?
-        )
-        .execute(&self.db_pool)
-        .await
-        .map_err(|e| e.to_string())?;
+    /// Bulk upsert of all records in a single round-trip.
+    /// Uses DO UPDATE on conflict: periodic reruns refresh today's rates instead of keeping stale values.
+    /// Requires unique (base, quote, date, source) keys within the batch, guaranteed by the caller building from keyed maps.
+    pub async fn create_many(&self, records: &[CurrencyRateRecord]) -> Result<usize, String> {
+        if records.is_empty() {
+            return Ok(0);
+        }
 
-        Ok(())
+        // convert upfront so the SQL-building closure stays infallible
+        let rates: Vec<BigDecimal> = records
+            .iter()
+            .map(|r| from_rust_decimal(r.rate))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let mut qb = QueryBuilder::<Postgres>::new(
+            "INSERT INTO CurrencyRates (base_currency_id, quote_currency_id, date, source, rate)",
+        );
+        qb.push_values(
+            records.iter().zip(rates.iter()),
+            |mut values, (record, rate)| {
+                values
+                    .push_bind(record.base_currency_id)
+                    .push_bind(record.quote_currency_id)
+                    .push_bind(record.date)
+                    .push_bind(record.source.as_str())
+                    .push_bind(rate);
+            },
+        );
+        qb.push(
+            "ON CONFLICT (base_currency_id, quote_currency_id, date, source) DO UPDATE SET \
+             rate = EXCLUDED.rate, created_at = CURRENT_TIMESTAMP",
+        );
+
+        qb.build()
+            .execute(&self.db_pool)
+            .await
+            .map(|result| result.rows_affected() as usize)
+            .map_err(|e| e.to_string())
     }
 
     pub async fn search(
