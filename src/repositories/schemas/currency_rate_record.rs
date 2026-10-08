@@ -29,9 +29,3 @@ impl<'r> FromRow<'r, sqlx::postgres::PgRow> for CurrencyRateRecord {
         })
     }
 }
-
-impl CurrencyRateRecord {
-    pub fn display(&self) -> String {
-        format!("{}/{}", self.base_currency_id, self.quote_currency_id)
-    }
-}
