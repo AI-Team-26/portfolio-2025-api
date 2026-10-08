@@ -56,9 +56,6 @@
 
 - Feature 29 [refactor/29_db_pool_from_state] Now that `AppState` exposes `db_pool` (feat/10_health_endpoint), update endpoint dependency injection where direct database access is needed: source the pool from `AppState` instead of wiring additional repository/service dependencies through constructors and `inject_services`
 
-- Feature 31 [feat/31_metrics] Add GET /netrics exposing some metrics info: HTTP request total, HTTP Request duration P99
-  If easy expose it in Prometheus-format.
-
 - Feature 11 [SUSPENDED: too big and unnecessary] [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
  (http_requests_total{method,route,status}, http_request_duration_seconds), in-flight requests gauge, and sqlx pool gauges (size, idle, waiting_tasks) polled from PgPoolMetrics — enables measuring pool
  saturation to inform refactor/08_db_pool_tuning values. Route must be excluded from auth middleware; restrict access at nginx level (allow internal network/scrapers only, deny public) since metric labels can
@@ -72,6 +69,7 @@
 
 ## Done
 
+- Feature 31 | `GET /metrics` Prometheus endpoint: per-route request counts (`axum_http_requests_total{method,status,endpoint}`), duration histogram incl. P99 (`axum_http_request_duration_seconds`), in-flight gauge, sqlx pool gauges; unauthenticated route restricted at nginx level (PR #35)
 - Feature 9 | Real client metadata at login: IP from Cf-Connecting-Ip / X-Forwarded-For first hop + User-Agent persisted to Sessions (PR #29)
 - Feature 15 | Single-query session refresh: `refresh_session()` relies solely on bound-token lookup (pre-check removed), raw tokens scrubbed from errors/logs (PR #30)
 - Feature 20 | Modernized deps: once_cell → std::sync::LazyLock, async-trait → native async fn in traits (PR #28)
