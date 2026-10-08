@@ -1,16 +1,5 @@
 # TODO
 
-- Feature 11 [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
- (http_requests_total{method,route,status}, http_request_duration_seconds), in-flight requests gauge, and sqlx pool gauges (size, idle, waiting_tasks) polled from PgPoolMetrics — enables measuring pool
- saturation to inform refactor/08_db_pool_tuning values. Route must be excluded from auth middleware; restrict access at nginx level (allow internal network/scrapers only, deny public) since metric labels can
- leak info. Add scrape interval guidance (15-30s) and note that /metrics responses must not be cached by Cloudflare.
-
-- Feature 12 [feat/12_opentelemetry_tracing] Integrate distributed tracing: add opentelemetry, opentelemetry_sdk, opentelemetry-otlp, tracing-opentelemetry deps. Create TracerProvider with OTLP exporter
- (endpoint configurable via config layer, e.g. OTEL_EXPORTER_OTLP_ENDPOINT env var); wrap tokio runtime with tracer subscriber so existing tracing spans propagate W3C traceparent headers on outbound HTTP
- calls (Coingecko API client) and inject TraceId into the existing JSON logging format (tracing-subscriber json writer customizer or field injection) so every log line carries the trace ID even without a
- collector deployed. Phase 1 (this PR): local span hierarchy (HTTP handler → service → repository SQL) + trace ID in logs. Phase 2 (follow-up, needs infra): OTLP export to Grafana Tempo/Jaeger — blocked until
- an OTLP collector exists in devops stack; leave exporter disabled-by-default via configuration flag enable_distributed_tracing (default false).
-
 - Feature 30 [test/06_integration_test_coverage] Extend endpoint integration tests (tests/integration_tests.rs, testcontainers Postgres): `list_of_user` endpoint, `update` variants for currency/custodian/holding, custodian CRUD (single/create/delete)
 
 - Epic 13 | Introduce mocking and service-level unit tests (mockall + trait seams; currently only pure-function units exist, services/repositories untested)
@@ -66,6 +55,20 @@
   **Recommendation:** audit these separately. Classify each as an invariant, startup failure, or request/data failure before replacing it. Do not blindly replace all `unwrap` calls with a generic error.
 
 - Feature 29 [refactor/29_db_pool_from_state] Now that `AppState` exposes `db_pool` (feat/10_health_endpoint), update endpoint dependency injection where direct database access is needed: source the pool from `AppState` instead of wiring additional repository/service dependencies through constructors and `inject_services`
+
+- Feature 31 [feat/31_metrics] Add GET /netrics exposing some metrics info: HTTP request total, HTTP Request duration P99
+  If easy expose it in Prometheus-format.
+
+- Feature 11 [SUSPENDED: too big and unnecessary] [feat/11_metrics_endpoint] Add GET /metrics exposing Prometheus-format metrics using axum-prometheus (add axum-prometheus dep): per-route request count histogram
+ (http_requests_total{method,route,status}, http_request_duration_seconds), in-flight requests gauge, and sqlx pool gauges (size, idle, waiting_tasks) polled from PgPoolMetrics — enables measuring pool
+ saturation to inform refactor/08_db_pool_tuning values. Route must be excluded from auth middleware; restrict access at nginx level (allow internal network/scrapers only, deny public) since metric labels can
+ leak info. Add scrape interval guidance (15-30s) and note that /metrics responses must not be cached by Cloudflare.
+
+- Feature 12 [SUSPENDED:too big and unnecessary] [feat/12_opentelemetry_tracing] Integrate distributed tracing: add opentelemetry, opentelemetry_sdk, opentelemetry-otlp, tracing-opentelemetry deps. Create TracerProvider with OTLP exporter
+ (endpoint configurable via config layer, e.g. OTEL_EXPORTER_OTLP_ENDPOINT env var); wrap tokio runtime with tracer subscriber so existing tracing spans propagate W3C traceparent headers on outbound HTTP
+ calls (Coingecko API client) and inject TraceId into the existing JSON logging format (tracing-subscriber json writer customizer or field injection) so every log line carries the trace ID even without a
+ collector deployed. Phase 1 (this PR): local span hierarchy (HTTP handler → service → repository SQL) + trace ID in logs. Phase 2 (follow-up, needs infra): OTLP export to Grafana Tempo/Jaeger — blocked until
+ an OTLP collector exists in devops stack; leave exporter disabled-by-default via configuration flag enable_distributed_tracing (default false).
 
 ## Done
 
