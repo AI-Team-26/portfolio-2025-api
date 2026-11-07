@@ -19,8 +19,6 @@
 
 - Feature 18 [feat/18_request_timeout_middleware] Add HTTP request timeout protection: wrap router with tower `TimeoutLayer` (tower::timeout) returning 504 Gateway Timeout when a handler exceeds budget (start 30s global; allow per-route override later if needed). Note complementarity with db acquire_timeout (refactor/08): pool wait is bounded separately so slow handlers fail fast rather than hang connections. Ensure background jobs are unaffected (they don't go through the HTTP layer).
 
-- Feature 19 [feat/19_graceful_shutdown] Implement graceful shutdown in main.rs: axum `serve(...).with_graceful_shutdown(signal)` on SIGINT/SIGTERM via tokio::signal; sequence: stop accepting new connections → drain in-flight requests with bounded wait (~10-30s then force exit) → cancel scheduled cron jobs via job_manager handle → close PgPool cleanly (pool.close()) → log each phase. Critical for Docker deploys where orchestrator sends SIGTERM to old container during rollout.
-
 - Feature 21 [feat/21_security_headers_ratelimit] Harden API security surface: (a) in-app rate limiting with tower-governor GovernorLayer on /auth/* routes (~10 req/min per client, keyed from Cf-Connecting-Ip/XFF first hop per fix/09); (b) security response headers via tower-http SetResponseHeader layer: Content-Security-Policy (tuned to frontend origin), X-Content-Type-Options: nosniff, Referrer-Policy: no-referrer; (c) document that HSTS + edge brute-force rules belong in Cloudflare config (Always Use HTTPS + WAF rate-limit rule on /auth/*) — provide exact CF dashboard steps in devop/README.md rather than code. Verify headers present in curl -I responses end-to-end through nginx.
 
 - Feature 24 | Error contracts are inconsistent — medium/high severity
@@ -44,7 +42,7 @@
 
   **Recommendation:** rely on the unique constraint for correctness, translate its violation into a typed `UsernameAlreadyInUse`, and retain the pre-check only if its UX benefit is demonstrated and its race limitation is documented. Add a database-error mapping test.
 
-- Feature 26 | Error messages contain avoidable noise and inconsistent context — low/medium severity
+- Feature 26 | Error message noise and inconsistent context — low/medium severity
 
   There are typos (`Currncies`, `Cistodian`, `Sessoon`), inconsistent capitalization, repeated `Failed to ...` wrappers, and commented-out implementations around active repository code. These are readability problems, but changing them should not be mixed with behavior changes unless the affected call site is being migrated.
 
@@ -72,6 +70,7 @@
 
 ## Done
 
+- Feature 19 | Graceful shutdown: SIGINT/SIGTERM → stop accepting connections, drain in-flight requests (bounded by DRAIN_TIMEOUT), cancel cron jobs, close PgPool, log each phase
 - Feature 9 | Real client metadata at login: IP from Cf-Connecting-Ip / X-Forwarded-For first hop + User-Agent persisted to Sessions (PR #29)
 - Feature 15 | Single-query session refresh: `refresh_session()` relies solely on bound-token lookup (pre-check removed), raw tokens scrubbed from errors/logs (PR #30)
 - Feature 20 | Modernized deps: once_cell → std::sync::LazyLock, async-trait → native async fn in traits (PR #28)
