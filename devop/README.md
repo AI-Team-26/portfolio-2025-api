@@ -60,6 +60,38 @@ The Dockerfile `HEALTHCHECK` curls `/health` every 30s.
 - Cloudflare: set caching level to "Bypass Cache" for `/health*` (Cache Rules → URL path starts with `/health`). Caching health responses hides real outages from orchestrators.
 - Behind trusted proxies, readiness reflects the API→DB leg only; end-to-end checks belong at the load balancer/proxy level.
 
+### Metrics endpoint
+
+`GET /metrics` is public (no auth) and exposes Prometheus-format metrics:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `http_requests_total{method,route,status}` | counter | Requests per route pattern/method/status |
+| `http_request_duration_seconds` | histogram | Request latency per route |
+| `in_flight_requests` | gauge | Currently active requests |
+| `db_pool_size` / `db_pool_idle` / `db_pool_waiting_tasks` | gauges | sqlx pool state, polled live from `PgPool` on each scrape |
+
+The pool gauges are what you watch to decide `database_pool.*` tuning values (see above).
+
+**Access restriction:** `/metrics` has no application-level auth because metric labels (routes, status codes) can leak operational detail. Restrict it at nginx — allow internal network/scrapers only, deny everything else:
+
+```nginx
+location = /metrics {
+    # adjust to your internal subnet / prometheus sidecar address
+    allow 10.0.0.0/8;
+    allow 172.16.0.0/12;
+    allow 192.168.0.0/16;
+    deny all;
+    proxy_pass http://api_upstream;
+}
+```
+
+**Scrape interval:** 15–30s is plenty for this workload (Prometheus default is 15s). Do not scrape more often than ~5s — every scrape serializes all registered metrics.
+
+**Caching:**
+- nginx: do not cache `/metrics` (`proxy_cache off` / exclude from cache rules); stale metrics hide current saturation.
+- Cloudflare: set caching level to "Bypass Cache" for URL path starting with `/metrics` (Cache Rules), same as `/health`.
+
 ## Test Docker image locally
 
 See _local_Dockerfile.sh_.  

@@ -292,3 +292,44 @@ async fn holding_list_returns_items() {
     .await;
     let _ = response;
 }
+
+// ── Metrics ────────────────────────────────────────────────────────
+
+#[tokio::test]
+async fn metrics_endpoint_is_public_and_reports_expected_metrics() {
+    let state = app_state().await;
+    let metrics = portfolio_api::utils::metrics::init_metrics(state.db_pool.clone());
+    let app = portfolio_api::utils::routing::set_routes(state.clone(), &metrics).with_state(state);
+
+    let request = http::Request::builder()
+        .uri("/metrics")
+        .header("host", "localhost")
+        .body(axum::body::Body::empty())
+        .unwrap();
+
+    let response = tower::ServiceExt::oneshot(app, request)
+        .await
+        .expect("request failed");
+
+    assert_eq!(response.status(), 200);
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("read body");
+    let text = String::from_utf8(body.to_vec()).expect("utf8");
+
+    // Pool gauges are updated by a background poller; give it time for a tick.
+    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+
+    for expected in [
+        "axum_http_requests_total",
+        "axum_http_request_duration_seconds",
+        "axum_http_requests_pending",
+        "db_pool_size",
+        "db_pool_idle",
+        "db_pool_in_use",
+    ] {
+        assert!(text.contains(expected), "missing metric: {expected}");
+    }
+    // The scrape of this very request must be counted.
+    assert!(text.contains(r#"endpoint="/metrics""#));
+}

@@ -1,15 +1,24 @@
-use crate::{endpoints, state::AppState};
+use crate::{endpoints, state::AppState, utils::metrics::AppMetrics};
 use axum::{
     middleware,
     routing::{delete, get, patch, post, put},
     Router,
 };
 
-pub fn set_routes(app_state: AppState) -> Router<AppState> {
+pub fn set_routes(app_state: AppState, metrics: &AppMetrics) -> Router<AppState> {
     // Public routes
     let public_routes = Router::new()
         .route("/", get(endpoints::common_endpoint::home))
         .route("/health", get(endpoints::common_endpoint::health))
+        // Prometheus scrape endpoint: no auth here on purpose — access is restricted
+        // at the nginx level (internal network/scrapers only). See devop/README.md.
+        .route(
+            "/metrics",
+            get({
+                let handle = metrics.handle.clone();
+                move || async move { handle.render() }
+            }),
+        )
         // auth
         .route("/auth/login", post(endpoints::auth_endpoint::login))
         .route("/auth/signup", post(endpoints::auth_endpoint::signup))
@@ -80,6 +89,7 @@ pub fn set_routes(app_state: AppState) -> Router<AppState> {
             app_state.clone(),
             crate::utils::auth_middleware::requires_user,
         )))
+        .layer(metrics.layer.clone())
         .with_state(app_state)
 }
 
